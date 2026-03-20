@@ -21,14 +21,32 @@ export default function LoginPage() {
     setError('')
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
 
-    if (error) {
-      setError(error.message)
+    if (signInError) {
+      if (signInError.message === 'Email not confirmed') {
+        setError('Your email has not been confirmed yet. Please check your inbox (and spam folder) for a confirmation email from noreply@mail.app.supabase.io')
+      } else {
+        setError(signInError.message)
+      }
       setLoading(false)
     } else {
-      router.push('/dashboard')
-      router.refresh()
+      // Check if user is admin
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single()
+
+        if (profile?.role === 'admin') {
+          router.push('/admin')
+        } else {
+          router.push('/dashboard')
+        }
+        router.refresh()
+      }
     }
   }
 
@@ -47,7 +65,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           {error && (
-            <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div className="rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
               {error}
             </div>
           )}

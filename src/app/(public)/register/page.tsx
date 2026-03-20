@@ -2,13 +2,11 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { Mail, Lock, Eye, EyeOff, User, Phone, UserPlus } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, Phone, UserPlus, CheckCircle } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -16,6 +14,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,9 +37,40 @@ export default function RegisterPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/dashboard')
-      router.refresh()
+      setSuccess(true)
+      setLoading(false)
     }
+  }
+
+  if (success) {
+    return (
+      <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+            <CheckCircle className="h-8 w-8 text-brand-green-600" />
+          </div>
+          <h1 className="mt-6 text-2xl font-bold text-gray-900">Check your email</h1>
+          <p className="mt-3 text-gray-600">
+            We&apos;ve sent a confirmation link to <strong>{email}</strong>
+          </p>
+          <div className="mt-6 rounded-lg bg-amber-50 border border-amber-200 px-4 py-4 text-sm text-amber-800">
+            <p className="font-medium">Important:</p>
+            <ul className="mt-2 space-y-1 text-left list-disc list-inside">
+              <li>The email comes from <strong>noreply@mail.app.supabase.io</strong></li>
+              <li>Check your <strong>spam/junk folder</strong> if you don&apos;t see it</li>
+              <li>Click the confirmation link in the email to activate your account</li>
+              <li>The link may take a minute to arrive</li>
+            </ul>
+          </div>
+          <p className="mt-6 text-sm text-gray-500">
+            Already confirmed?{' '}
+            <Link href="/login" className="font-medium text-brand-green-600 hover:text-brand-green-700">
+              Sign in here
+            </Link>
+          </p>
+        </div>
+      </div>
+    )
   }
 
   return (
