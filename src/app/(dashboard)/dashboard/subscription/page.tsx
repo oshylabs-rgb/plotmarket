@@ -1,15 +1,47 @@
 'use client'
 
-import { Check, Star, CreditCard, Calendar, AlertCircle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Check, Star, CreditCard, Calendar, AlertCircle, Loader2 } from 'lucide-react'
 import { PRICING_PLANS } from '@/constants/pricing'
-import { MOCK_SUBSCRIPTIONS } from '@/constants/mock-data'
 import { formatNaira } from '@/lib/utils'
 import { format } from 'date-fns'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
+import type { Subscription } from '@/types/database'
 
 export default function SubscriptionPage() {
-  // Mock: current user is u1 with professional plan
-  const currentSub = MOCK_SUBSCRIPTIONS.find((s) => s.user_id === 'u1')
-  const currentPlanName = currentSub?.plan || 'basic'
+  const { user, profile, loading: authLoading } = useAuth()
+  const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) return
+
+    const fetchSubscription = async () => {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      setSubscription(data?.[0] || null)
+      setLoading(false)
+    }
+
+    fetchSubscription()
+  }, [user])
+
+  if (authLoading || loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
+      </div>
+    )
+  }
+
+  const currentPlanName = subscription?.plan || profile?.account_type || 'basic'
 
   return (
     <div>
@@ -17,7 +49,7 @@ export default function SubscriptionPage() {
       <p className="mt-1 text-gray-500">Manage your subscription and billing</p>
 
       {/* Current Plan */}
-      {currentSub && (
+      {subscription ? (
         <div className="mt-6 rounded-xl border-2 border-brand-green-400 bg-brand-green-50 p-6">
           <div className="flex items-start justify-between">
             <div>
@@ -26,30 +58,40 @@ export default function SubscriptionPage() {
                 <h2 className="text-lg font-semibold text-brand-green-800">Current Plan</h2>
               </div>
               <p className="mt-2 text-2xl font-bold capitalize text-brand-green-700">
-                {currentSub.plan}
+                {subscription.plan}
               </p>
               <p className="mt-1 text-sm text-brand-green-600">
-                {formatNaira(currentSub.amount)}/month
+                {formatNaira(subscription.amount)}/month
               </p>
             </div>
             <span className={`rounded-full px-3 py-1 text-sm font-medium capitalize ${
-              currentSub.status === 'active'
+              subscription.status === 'active'
                 ? 'bg-green-100 text-green-700'
                 : 'bg-red-100 text-red-700'
             }`}>
-              {currentSub.status}
+              {subscription.status}
             </span>
           </div>
           <div className="mt-4 flex flex-wrap gap-4 text-sm text-brand-green-600">
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              Started: {format(new Date(currentSub.start_date), 'MMM d, yyyy')}
+              Started: {format(new Date(subscription.start_date), 'MMM d, yyyy')}
             </span>
             <span className="flex items-center gap-1">
               <AlertCircle className="h-4 w-4" />
-              Renews: {format(new Date(currentSub.end_date), 'MMM d, yyyy')}
+              Renews: {format(new Date(subscription.end_date), 'MMM d, yyyy')}
             </span>
           </div>
+        </div>
+      ) : (
+        <div className="mt-6 rounded-xl border-2 border-brand-cream-300 bg-brand-cream-50 p-6">
+          <div className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5 text-gray-500" />
+            <h2 className="text-lg font-semibold text-gray-800">Free Plan</h2>
+          </div>
+          <p className="mt-2 text-sm text-gray-600">
+            You are currently on the free Basic plan with up to 5 listings.
+          </p>
         </div>
       )}
 

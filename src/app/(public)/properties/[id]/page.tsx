@@ -1,18 +1,87 @@
 'use client'
 
-import { use } from 'react'
+import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, Bed, Bath, Maximize, Tag, Shield, Star, User, Phone, Mail, MessageSquare } from 'lucide-react'
-import { MOCK_PROPERTIES, MOCK_PROFILES } from '@/constants/mock-data'
+import { ArrowLeft, MapPin, Bed, Bath, Maximize, Tag, Shield, Star, User, Phone, Mail, MessageSquare, Loader2, AlertCircle } from 'lucide-react'
 import { formatNaira, getPropertyGradient } from '@/lib/utils'
-import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
+import type { Property, Profile } from '@/types/database'
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const property = MOCK_PROPERTIES.find((p) => p.id === id)
-  const agent = property ? MOCK_PROFILES.find((a) => a.id === property.user_id) : null
+  const { user } = useAuth()
+  const [property, setProperty] = useState<Property | null>(null)
+  const [agent, setAgent] = useState<Profile | null>(null)
+  const [loading, setLoading] = useState(true)
   const [inquiryMessage, setInquiryMessage] = useState('')
   const [inquirySent, setInquirySent] = useState(false)
+  const [inquiryError, setInquiryError] = useState('')
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      const supabase = createClient()
+
+      const { data: propertyData } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      if (propertyData) {
+        setProperty(propertyData)
+
+        // Fetch the listing owner profile
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', propertyData.user_id)
+          .single()
+
+        setAgent(profileData)
+      }
+
+      setLoading(false)
+    }
+
+    fetchProperty()
+  }, [id])
+
+  const handleInquiry = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setInquiryError('')
+
+    if (!user) {
+      setInquiryError('You must be logged in to send an inquiry')
+      return
+    }
+
+    if (!property) return
+
+    const supabase = createClient()
+    const { error } = await supabase.from('inquiries').insert({
+      property_id: property.id,
+      sender_id: user.id,
+      receiver_id: property.user_id,
+      message: inquiryMessage,
+    })
+
+    if (error) {
+      setInquiryError(error.message)
+    } else {
+      setInquirySent(true)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
+        </div>
+      </div>
+    )
+  }
 
   if (!property) {
     return (
@@ -117,7 +186,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
           </div>
 
           {/* Features */}
-          {property.features.length > 0 && (
+          {property.features && property.features.length > 0 && (
             <div className="mt-8">
               <h2 className="text-lg font-semibold text-gray-900">Features & Amenities</h2>
               <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -170,13 +239,15 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900">{agent.full_name}</p>
-                  <p className="text-sm text-gray-500 capitalize">{agent.account_type} Agent</p>
+                  <p className="text-sm text-gray-500 capitalize">
+                    {agent.user_type || 'Individual'}
+                  </p>
                 </div>
               </div>
               {agent.is_verified && (
                 <div className="mt-3 flex items-center gap-1 text-sm text-brand-green-600">
                   <Shield className="h-4 w-4" />
-                  Verified Agent
+                  Verified
                 </div>
               )}
               <div className="mt-4 space-y-2">
@@ -185,7 +256,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   className="flex items-center gap-2 text-sm text-gray-600 hover:text-brand-green-600"
                 >
                   <Phone className="h-4 w-4" />
-                  {agent.phone}
+                  {agent.phone || 'Not provided'}
                 </a>
                 <a
                   href={`mailto:${agent.email}`}
@@ -209,17 +280,17 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 <Shield className="mx-auto h-8 w-8 text-brand-green-500" />
                 <p className="mt-2 font-medium text-brand-green-700">Inquiry Sent!</p>
                 <p className="text-sm text-brand-green-600">
-                  The agent will get back to you shortly.
+                  The listing owner will get back to you shortly.
                 </p>
               </div>
             ) : (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  setInquirySent(true)
-                }}
-                className="mt-4 space-y-3"
-              >
+              <form onSubmit={handleInquiry} className="mt-4 space-y-3">
+                {inquiryError && (
+                  <div className="flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
+                    <AlertCircle className="h-3 w-3 shrink-0" />
+                    {inquiryError}
+                  </div>
+                )}
                 <textarea
                   value={inquiryMessage}
                   onChange={(e) => setInquiryMessage(e.target.value)}
@@ -231,9 +302,14 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                 <button type="submit" className="btn btn-primary w-full">
                   Send Inquiry
                 </button>
-                <p className="text-center text-xs text-gray-400">
-                  You must be logged in to send inquiries
-                </p>
+                {!user && (
+                  <p className="text-center text-xs text-gray-400">
+                    <Link href="/login" className="text-brand-green-600 hover:underline">
+                      Sign in
+                    </Link>{' '}
+                    to send inquiries
+                  </p>
+                )}
               </form>
             )}
           </div>

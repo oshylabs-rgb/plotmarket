@@ -1,8 +1,12 @@
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Search, Building2, Users, MapPin, TrendingUp, ArrowRight, Star, Shield, Clock } from 'lucide-react'
 import { PropertyCard } from '@/components/PropertyCard'
-import { MOCK_PROPERTIES } from '@/constants/mock-data'
 import { formatNaira } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import type { Property } from '@/types/database'
 
 const STATS = [
   { label: 'Properties', value: '10,000+', icon: Building2 },
@@ -30,7 +34,24 @@ const FEATURES = [
 ]
 
 export default function HomePage() {
-  const featuredProperties = MOCK_PROPERTIES.filter((p) => p.is_featured && p.status === 'approved')
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([])
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('status', 'approved')
+        .order('is_featured', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(8)
+
+      setFeaturedProperties(data || [])
+    }
+
+    fetchFeatured()
+  }, [])
 
   return (
     <div>
@@ -114,11 +135,22 @@ export default function HomePage() {
             View all <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {featuredProperties.map((property) => (
-            <PropertyCard key={property.id} property={property} />
-          ))}
-        </div>
+        {featuredProperties.length > 0 ? (
+          <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {featuredProperties.map((property) => (
+              <PropertyCard key={property.id} property={property} />
+            ))}
+          </div>
+        ) : (
+          <div className="mt-8 rounded-xl border border-brand-cream-300 bg-white py-12 text-center">
+            <Building2 className="mx-auto h-12 w-12 text-gray-300" />
+            <h3 className="mt-4 text-lg font-semibold text-gray-900">No properties yet</h3>
+            <p className="mt-2 text-sm text-gray-500">Be the first to list a property on Plotmarket</p>
+            <Link href="/register" className="btn btn-primary mt-4">
+              Get Started
+            </Link>
+          </div>
+        )}
         <div className="mt-6 text-center sm:hidden">
           <Link href="/properties" className="btn btn-outline">
             View All Properties

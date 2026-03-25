@@ -1,19 +1,60 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Plus, Search, Edit, Trash2, Eye, MoreVertical } from 'lucide-react'
-import { MOCK_PROPERTIES } from '@/constants/mock-data'
+import { Plus, Search, Edit, Trash2, Eye, Loader2 } from 'lucide-react'
 import { formatNaira, getStatusColor } from '@/lib/utils'
 import { format } from 'date-fns'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
+import type { Property } from '@/types/database'
 
 export default function ListingsPage() {
+  const { user, loading: authLoading } = useAuth()
   const [search, setSearch] = useState('')
-  const properties = MOCK_PROPERTIES.filter((p) => p.user_id === 'u1')
+  const [properties, setProperties] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) return
+
+    const fetchListings = async () => {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      setProperties(data || [])
+      setLoading(false)
+    }
+
+    fetchListings()
+  }, [user])
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this listing?')) return
+
+    const supabase = createClient()
+    const { error } = await supabase.from('properties').delete().eq('id', id)
+
+    if (!error) {
+      setProperties((prev) => prev.filter((p) => p.id !== id))
+    }
+  }
 
   const filteredProperties = properties.filter((p) =>
     search ? p.title.toLowerCase().includes(search.toLowerCase()) : true
   )
+
+  if (authLoading || loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -113,6 +154,7 @@ export default function ListingsPage() {
                       <Edit className="h-4 w-4" />
                     </button>
                     <button
+                      onClick={() => handleDelete(property.id)}
                       className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
                       title="Delete"
                     >
@@ -126,7 +168,9 @@ export default function ListingsPage() {
         </table>
         {filteredProperties.length === 0 && (
           <div className="py-12 text-center">
-            <p className="text-gray-500">No listings found</p>
+            <p className="text-gray-500">
+              {properties.length === 0 ? 'You haven\'t listed any properties yet' : 'No listings found'}
+            </p>
             <Link href="/dashboard/listings/new" className="btn btn-primary mt-4">
               Add Your First Property
             </Link>

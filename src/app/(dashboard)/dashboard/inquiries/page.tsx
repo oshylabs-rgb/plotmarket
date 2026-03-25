@@ -1,20 +1,73 @@
 'use client'
 
-import { useState } from 'react'
-import { MessageSquare, Clock, User } from 'lucide-react'
-import { MOCK_INQUIRIES, MOCK_PROPERTIES, MOCK_PROFILES } from '@/constants/mock-data'
+import { useEffect, useState } from 'react'
+import { MessageSquare, Clock, User, Loader2 } from 'lucide-react'
 import { getStatusColor } from '@/lib/utils'
 import { format } from 'date-fns'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
+import type { Inquiry, Property, Profile } from '@/types/database'
 
 export default function InquiriesPage() {
+  const { user, loading: authLoading } = useAuth()
   const [tab, setTab] = useState<'received' | 'sent'>('received')
+  const [inquiries, setInquiries] = useState<Inquiry[]>([])
+  const [properties, setProperties] = useState<Property[]>([])
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const received = MOCK_INQUIRIES.filter((i) => i.receiver_id === 'u1')
-  const sent = MOCK_INQUIRIES.filter((i) => i.sender_id === 'u1')
-  const inquiries = tab === 'received' ? received : sent
+  useEffect(() => {
+    if (!user) return
 
-  const getProperty = (id: string) => MOCK_PROPERTIES.find((p) => p.id === id)
-  const getProfile = (id: string) => MOCK_PROFILES.find((p) => p.id === id)
+    const fetchData = async () => {
+      const supabase = createClient()
+
+      const [inquiriesRes, propertiesRes, profilesRes] = await Promise.all([
+        supabase
+          .from('inquiries')
+          .select('*')
+          .or(`receiver_id.eq.${user.id},sender_id.eq.${user.id}`)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('properties')
+          .select('id, title')
+          .eq('status', 'approved'),
+        supabase
+          .from('profiles')
+          .select('id, full_name, email'),
+      ])
+
+      setInquiries(inquiriesRes.data || [])
+      setProperties(propertiesRes.data as Property[] || [])
+      setProfiles(profilesRes.data as Profile[] || [])
+      setLoading(false)
+    }
+
+    fetchData()
+  }, [user])
+
+  if (authLoading || loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
+      </div>
+    )
+  }
+
+  const received = inquiries.filter((i) => i.receiver_id === user?.id)
+  const sent = inquiries.filter((i) => i.sender_id === user?.id)
+  const displayed = tab === 'received' ? received : sent
+
+  const getProperty = (id: string) => properties.find((p) => p.id === id)
+  const getProfile = (id: string) => profiles.find((p) => p.id === id)
+
+  const handleMarkRead = async (inquiryId: string) => {
+    const supabase = createClient()
+    await supabase.from('inquiries').update({ status: 'read' }).eq('id', inquiryId)
+    setInquiries((prev) =>
+      prev.map((i) => (i.id === inquiryId ? { ...i, status: 'read' } : i))
+    )
+  }
 
   return (
     <div>
@@ -47,8 +100,8 @@ export default function InquiriesPage() {
 
       {/* Inquiry list */}
       <div className="mt-6 space-y-4">
-        {inquiries.length > 0 ? (
-          inquiries.map((inquiry) => {
+        {displayed.length > 0 ? (
+          displayed.map((inquiry) => {
             const property = getProperty(inquiry.property_id)
             const person = tab === 'received'
               ? getProfile(inquiry.sender_id)
@@ -89,10 +142,14 @@ export default function InquiriesPage() {
 
                 <p className="mt-3 text-sm leading-relaxed text-gray-600">{inquiry.message}</p>
 
-                {tab === 'received' && inquiry.status !== 'replied' && (
+                {tab === 'received' && inquiry.status === 'unread' && (
                   <div className="mt-4 flex gap-2">
-                    <button className="btn btn-primary text-xs py-1.5 px-3">Reply</button>
-                    <button className="btn btn-outline text-xs py-1.5 px-3">Mark as Read</button>
+                    <button
+                      onClick={() => handleMarkRead(inquiry.id)}
+                      className="btn btn-outline text-xs py-1.5 px-3"
+                    >
+                      Mark as Read
+                    </button>
                   </div>
                 )}
               </div>

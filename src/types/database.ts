@@ -2,6 +2,8 @@ export type UserRole = 'user' | 'admin'
 
 export type AccountType = 'basic' | 'starter' | 'professional' | 'business' | 'enterprise'
 
+export type UserType = 'individual' | 'agent' | 'developer'
+
 export type PropertyType = 'house' | 'apartment' | 'land' | 'commercial' | 'development'
 
 export type ListingType = 'sale' | 'rent' | 'lease'
@@ -19,6 +21,7 @@ export interface Profile {
   phone: string | null
   role: UserRole
   account_type: AccountType
+  user_type: UserType
   is_verified: boolean
   avatar_url: string | null
   created_at: string

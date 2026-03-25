@@ -2,16 +2,21 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save } from 'lucide-react'
+import { ArrowLeft, Save, AlertCircle, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import { NIGERIAN_STATES } from '@/constants/states'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/hooks/useAuth'
 
 const PROPERTY_TYPES = ['house', 'apartment', 'land', 'commercial', 'development']
 const LISTING_TYPES = ['sale', 'rent', 'lease']
 
 export default function NewListingPage() {
   const router = useRouter()
+  const { user } = useAuth()
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -33,10 +38,58 @@ export default function NewListingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user) {
+      setError('You must be logged in to create a listing')
+      return
+    }
+
     setLoading(true)
-    // In production, this would call Supabase to insert the property
-    await new Promise((r) => setTimeout(r, 1000))
-    router.push('/dashboard/listings')
+    setError('')
+
+    const supabase = createClient()
+
+    const featuresArray = form.features
+      .split(',')
+      .map((f) => f.trim())
+      .filter(Boolean)
+
+    const { error: insertError } = await supabase.from('properties').insert({
+      user_id: user.id,
+      title: form.title,
+      description: form.description,
+      type: form.type,
+      listing_type: form.listing_type,
+      price: parseInt(form.price),
+      location: form.location || null,
+      state: form.state,
+      city: form.city || null,
+      bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
+      bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
+      area: form.area ? parseInt(form.area) : null,
+      images: [],
+      features: featuresArray,
+    })
+
+    if (insertError) {
+      setError(insertError.message)
+      setLoading(false)
+    } else {
+      setSuccess(true)
+      setTimeout(() => {
+        router.push('/dashboard/listings')
+      }, 1500)
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="flex h-64 flex-col items-center justify-center">
+        <CheckCircle className="h-12 w-12 text-brand-green-500" />
+        <h2 className="mt-4 text-xl font-bold text-gray-900">Property Listed!</h2>
+        <p className="mt-1 text-gray-500">Your property has been submitted for review.</p>
+        <p className="mt-1 text-sm text-gray-400">Redirecting to your listings...</p>
+      </div>
+    )
   }
 
   return (
@@ -53,6 +106,13 @@ export default function NewListingPage() {
       <p className="mt-1 text-gray-500">Fill in the details to list your property</p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+        {error && (
+          <div className="flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            {error}
+          </div>
+        )}
+
         {/* Basic Info */}
         <div className="rounded-xl border border-brand-cream-300 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900">Basic Information</h2>

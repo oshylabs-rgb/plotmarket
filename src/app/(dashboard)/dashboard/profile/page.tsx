@@ -1,22 +1,38 @@
 'use client'
 
 import { useState } from 'react'
-import { User, Mail, Phone, Lock, Save, Shield } from 'lucide-react'
-import { MOCK_PROFILES } from '@/constants/mock-data'
+import { User, Mail, Phone, Lock, Save, Shield, Building2, Users, Loader2 } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { createClient } from '@/lib/supabase/client'
+
+const USER_TYPE_LABELS: Record<string, { label: string; icon: typeof User }> = {
+  individual: { label: 'Individual', icon: User },
+  agent: { label: 'Real Estate Agent', icon: Users },
+  developer: { label: 'Property Developer', icon: Building2 },
+}
 
 export default function ProfilePage() {
-  const profile = MOCK_PROFILES[0] // Mock: current user
-  const [form, setForm] = useState({
-    full_name: profile.full_name || '',
-    phone: profile.phone || '',
-  })
+  const { user, profile, loading: authLoading } = useAuth()
+  const [form, setForm] = useState({ full_name: '', phone: '' })
+  const [initialized, setInitialized] = useState(false)
   const [passwordForm, setPasswordForm] = useState({
-    current: '',
     new_password: '',
     confirm: '',
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [passwordSaving, setPasswordSaving] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSaved, setPasswordSaved] = useState(false)
+
+  // Initialize form when profile loads
+  if (profile && !initialized) {
+    setForm({
+      full_name: profile.full_name || '',
+      phone: profile.phone || '',
+    })
+    setInitialized(true)
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -28,12 +44,65 @@ export default function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!user) return
+
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 1000))
+    const supabase = createClient()
+
+    await supabase
+      .from('profiles')
+      .update({
+        full_name: form.full_name,
+        phone: form.phone,
+      })
+      .eq('id', user.id)
+
     setSaving(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPasswordError('')
+
+    if (passwordForm.new_password !== passwordForm.confirm) {
+      setPasswordError('Passwords do not match')
+      return
+    }
+
+    if (passwordForm.new_password.length < 6) {
+      setPasswordError('Password must be at least 6 characters')
+      return
+    }
+
+    setPasswordSaving(true)
+    const supabase = createClient()
+
+    const { error } = await supabase.auth.updateUser({
+      password: passwordForm.new_password,
+    })
+
+    if (error) {
+      setPasswordError(error.message)
+    } else {
+      setPasswordSaved(true)
+      setPasswordForm({ new_password: '', confirm: '' })
+      setTimeout(() => setPasswordSaved(false), 3000)
+    }
+    setPasswordSaving(false)
+  }
+
+  if (authLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
+      </div>
+    )
+  }
+
+  const userTypeInfo = USER_TYPE_LABELS[profile?.user_type || 'individual']
+  const TypeIcon = userTypeInfo?.icon || User
 
   return (
     <div>
@@ -47,13 +116,17 @@ export default function ProfilePage() {
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-brand-green-100">
               <User className="h-10 w-10 text-brand-green-600" />
             </div>
-            <h2 className="mt-4 text-lg font-semibold text-gray-900">{profile.full_name}</h2>
-            <p className="text-sm text-gray-500">{profile.email}</p>
-            <div className="mt-2 flex items-center justify-center gap-2">
+            <h2 className="mt-4 text-lg font-semibold text-gray-900">{profile?.full_name || 'User'}</h2>
+            <p className="text-sm text-gray-500">{profile?.email || user?.email}</p>
+            <div className="mt-2 flex flex-col items-center gap-2">
               <span className="rounded-full bg-brand-green-100 px-2.5 py-0.5 text-xs font-medium capitalize text-brand-green-700">
-                {profile.account_type}
+                {profile?.account_type || 'basic'}
               </span>
-              {profile.is_verified && (
+              <span className="flex items-center gap-1 rounded-full bg-brand-cream-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+                <TypeIcon className="h-3 w-3" />
+                {userTypeInfo?.label || 'Individual'}
+              </span>
+              {profile?.is_verified && (
                 <span className="flex items-center gap-1 text-xs text-brand-green-600">
                   <Shield className="h-3 w-3" /> Verified
                 </span>
@@ -63,11 +136,11 @@ export default function ProfilePage() {
           <div className="mt-6 space-y-3 border-t border-brand-cream-200 pt-4">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Mail className="h-4 w-4 text-gray-400" />
-              {profile.email}
+              {profile?.email || user?.email}
             </div>
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Phone className="h-4 w-4 text-gray-400" />
-              {profile.phone}
+              {profile?.phone || 'Not set'}
             </div>
           </div>
         </div>
@@ -108,7 +181,7 @@ export default function ProfilePage() {
                 <label className="mb-1 block text-sm font-medium text-gray-700">Email</label>
                 <input
                   type="email"
-                  value={profile.email}
+                  value={profile?.email || user?.email || ''}
                   disabled
                   className="input-field bg-gray-50 text-gray-400"
                 />
@@ -123,22 +196,25 @@ export default function ProfilePage() {
           </form>
 
           {/* Password */}
-          <form className="rounded-xl border border-brand-cream-300 bg-white p-6 shadow-sm">
+          <form onSubmit={handlePasswordSubmit} className="rounded-xl border border-brand-cream-300 bg-white p-6 shadow-sm">
             <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
               <Lock className="h-5 w-5" />
               Change Password
             </h2>
-            <div className="mt-4 space-y-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">Current Password</label>
-                <input
-                  type="password"
-                  name="current"
-                  value={passwordForm.current}
-                  onChange={handlePasswordChange}
-                  className="input-field"
-                />
+
+            {passwordError && (
+              <div className="mt-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+                {passwordError}
               </div>
+            )}
+
+            {passwordSaved && (
+              <div className="mt-4 rounded-lg bg-brand-green-50 px-4 py-3 text-sm text-brand-green-700">
+                Password updated successfully!
+              </div>
+            )}
+
+            <div className="mt-4 space-y-4">
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">New Password</label>
                 <input
@@ -147,6 +223,7 @@ export default function ProfilePage() {
                   value={passwordForm.new_password}
                   onChange={handlePasswordChange}
                   className="input-field"
+                  minLength={6}
                 />
               </div>
               <div>
@@ -160,8 +237,8 @@ export default function ProfilePage() {
                 />
               </div>
             </div>
-            <button type="submit" className="btn btn-outline mt-6">
-              Update Password
+            <button type="submit" disabled={passwordSaving} className="btn btn-outline mt-6 disabled:opacity-50">
+              {passwordSaving ? 'Updating...' : 'Update Password'}
             </button>
           </form>
         </div>

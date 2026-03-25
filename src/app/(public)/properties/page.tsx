@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Search, SlidersHorizontal, X, Loader2 } from 'lucide-react'
 import { PropertyCard } from '@/components/PropertyCard'
-import { MOCK_PROPERTIES } from '@/constants/mock-data'
 import { NIGERIAN_STATES } from '@/constants/states'
 import { PropertyType, ListingType } from '@/types/database'
+import { createClient } from '@/lib/supabase/client'
+import type { Property } from '@/types/database'
 
 const PROPERTY_TYPES: { value: PropertyType; label: string }[] = [
   { value: 'house', label: 'House' },
@@ -30,20 +31,36 @@ export default function PropertiesPage() {
   const [maxPrice, setMaxPrice] = useState<string>('')
   const [bedrooms, setBedrooms] = useState<string>('')
   const [showFilters, setShowFilters] = useState(false)
+  const [properties, setProperties] = useState<Property[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filteredProperties = useMemo(() => {
-    return MOCK_PROPERTIES.filter((p) => {
-      if (p.status !== 'approved') return false
-      if (search && !p.title.toLowerCase().includes(search.toLowerCase()) && !p.location?.toLowerCase().includes(search.toLowerCase())) return false
-      if (type && p.type !== type) return false
-      if (listingType && p.listing_type !== listingType) return false
-      if (state && p.state !== state) return false
-      if (minPrice && p.price < Number(minPrice)) return false
-      if (maxPrice && p.price > Number(maxPrice)) return false
-      if (bedrooms && p.bedrooms !== Number(bedrooms)) return false
-      return true
-    })
-  }, [search, type, listingType, state, minPrice, maxPrice, bedrooms])
+  useEffect(() => {
+    const fetchProperties = async () => {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('status', 'approved')
+        .order('is_featured', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      setProperties(data || [])
+      setLoading(false)
+    }
+
+    fetchProperties()
+  }, [])
+
+  const filteredProperties = properties.filter((p) => {
+    if (search && !p.title.toLowerCase().includes(search.toLowerCase()) && !p.location?.toLowerCase().includes(search.toLowerCase())) return false
+    if (type && p.type !== type) return false
+    if (listingType && p.listing_type !== listingType) return false
+    if (state && p.state !== state) return false
+    if (minPrice && p.price < Number(minPrice)) return false
+    if (maxPrice && p.price > Number(maxPrice)) return false
+    if (bedrooms && p.bedrooms !== Number(bedrooms)) return false
+    return true
+  })
 
   const clearFilters = () => {
     setSearch('')
@@ -56,6 +73,16 @@ export default function PropertiesPage() {
   }
 
   const hasFilters = type || listingType || state || minPrice || maxPrice || bedrooms
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -177,11 +204,15 @@ export default function PropertiesPage() {
           <Search className="mx-auto h-12 w-12 text-gray-300" />
           <h3 className="mt-4 text-lg font-semibold text-gray-900">No properties found</h3>
           <p className="mt-2 text-sm text-gray-500">
-            Try adjusting your search or filters to find what you&apos;re looking for.
+            {properties.length === 0
+              ? 'No properties have been listed yet. Be the first!'
+              : 'Try adjusting your search or filters to find what you\'re looking for.'}
           </p>
-          <button onClick={clearFilters} className="btn btn-outline mt-4">
-            Clear Filters
-          </button>
+          {hasFilters && (
+            <button onClick={clearFilters} className="btn btn-outline mt-4">
+              Clear Filters
+            </button>
+          )}
         </div>
       )}
     </div>

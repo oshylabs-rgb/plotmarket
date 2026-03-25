@@ -2,15 +2,38 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Mail, Lock, Eye, EyeOff, User, Phone, UserPlus, CheckCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, Phone, UserPlus, CheckCircle, Building2, Users, Briefcase } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
+import type { UserType } from '@/types/database'
+
+const USER_TYPES: { value: UserType; label: string; description: string; icon: typeof User }[] = [
+  {
+    value: 'individual',
+    label: 'Individual',
+    description: 'I want to buy, sell, or rent my own property',
+    icon: User,
+  },
+  {
+    value: 'agent',
+    label: 'Agent',
+    description: 'I am a real estate agent listing properties for clients',
+    icon: Users,
+  },
+  {
+    value: 'developer',
+    label: 'Developer',
+    description: 'I am a property developer listing new developments',
+    icon: Building2,
+  },
+]
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [userType, setUserType] = useState<UserType>('individual')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -29,6 +52,7 @@ export default function RegisterPage() {
         data: {
           full_name: fullName,
           phone,
+          user_type: userType,
         },
       },
     })
@@ -92,6 +116,37 @@ export default function RegisterPage() {
               {error}
             </div>
           )}
+
+          {/* User Type Selection */}
+          <div>
+            <label className="mb-2 block text-sm font-medium text-gray-700">
+              I am a...
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {USER_TYPES.map((type) => {
+                const Icon = type.icon
+                const isSelected = userType === type.value
+                return (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => setUserType(type.value)}
+                    className={`flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 text-center transition-all ${
+                      isSelected
+                        ? 'border-brand-green-500 bg-brand-green-50 text-brand-green-700'
+                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                    }`}
+                  >
+                    <Icon className={`h-5 w-5 ${isSelected ? 'text-brand-green-600' : 'text-gray-400'}`} />
+                    <span className="text-xs font-semibold">{type.label}</span>
+                  </button>
+                )
+              })}
+            </div>
+            <p className="mt-1.5 text-xs text-gray-400">
+              {USER_TYPES.find((t) => t.value === userType)?.description}
+            </p>
+          </div>
 
           <div>
             <label htmlFor="fullName" className="mb-1 block text-sm font-medium text-gray-700">
