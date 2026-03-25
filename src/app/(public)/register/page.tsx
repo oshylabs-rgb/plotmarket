@@ -49,6 +49,7 @@ export default function RegisterPage() {
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           full_name: fullName,
           phone,
@@ -77,13 +78,16 @@ export default function RegisterPage() {
           <p className="mt-3 text-gray-600">
             We&apos;ve sent a confirmation link to <strong>{email}</strong>
           </p>
-          <div className="mt-6 rounded-lg bg-amber-50 border border-amber-200 px-4 py-4 text-sm text-amber-800">
-            <p className="font-medium">Important:</p>
+          <div className="mt-6 rounded-lg bg-brand-green-50 border border-brand-green-200 px-4 py-4 text-sm text-brand-green-800">
+            <p className="font-medium">What happens next:</p>
+            <p className="mt-1">Click the link in the email and you&apos;ll be logged in automatically — straight to your dashboard.</p>
+          </div>
+          <div className="mt-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-4 text-sm text-amber-800">
+            <p className="font-medium">Can&apos;t find the email?</p>
             <ul className="mt-2 space-y-1 text-left list-disc list-inside">
-              <li>The email comes from <strong>noreply@mail.app.supabase.io</strong></li>
-              <li>Check your <strong>spam/junk folder</strong> if you don&apos;t see it</li>
-              <li>Click the confirmation link in the email to activate your account</li>
-              <li>The link may take a minute to arrive</li>
+              <li>It comes from <strong>noreply@mail.app.supabase.io</strong></li>
+              <li>Check your <strong>spam/junk folder</strong></li>
+              <li>It may take a minute to arrive</li>
             </ul>
           </div>
           <p className="mt-6 text-sm text-gray-500">
