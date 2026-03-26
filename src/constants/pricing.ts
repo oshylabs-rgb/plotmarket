@@ -1,11 +1,25 @@
-export const PRICING_PLANS = [
+export interface PricingPlan {
+  name: string
+  planId: string
+  price: number
+  period: string
+  listings: number
+  featuredListings: number
+  features: string[]
+  cta: string
+  highlighted: boolean
+}
+
+export const PRICING_PLANS: PricingPlan[] = [
   {
-    name: 'Basic',
+    name: 'Free',
+    planId: 'free',
     price: 0,
     period: 'Free forever',
-    listings: 5,
+    listings: 3,
+    featuredListings: 0,
     features: [
-      '5 property listings',
+      '3 property listings',
       'Basic property details',
       'Email support',
       'Standard visibility',
@@ -15,61 +29,67 @@ export const PRICING_PLANS = [
   },
   {
     name: 'Starter',
-    price: 15000,
+    planId: 'starter',
+    price: 12000,
     period: '/month',
-    listings: 15,
+    listings: 20,
+    featuredListings: 3,
     features: [
-      '15 property listings',
+      '20 property listings',
+      '3 featured listings',
       'Featured badge',
-      'Priority support',
       'Analytics dashboard',
-      'Photo gallery (up to 10)',
+      'Priority support',
     ],
-    cta: 'Start Free Trial',
+    cta: 'Subscribe',
     highlighted: false,
   },
   {
     name: 'Professional',
-    price: 50000,
+    planId: 'professional',
+    price: 35000,
     period: '/month',
-    listings: 50,
+    listings: 100,
+    featuredListings: 20,
     features: [
-      '50 property listings',
-      'Featured & verified badges',
-      'Premium support',
-      'Advanced analytics',
-      'Photo gallery (up to 25)',
+      '100 property listings',
+      '20 featured listings',
+      'Verified badge',
       'Virtual tour support',
       'Lead generation tools',
+      'Advanced analytics',
     ],
-    cta: 'Start Free Trial',
+    cta: 'Subscribe',
     highlighted: true,
   },
   {
     name: 'Business',
-    price: 100000,
+    planId: 'business',
+    price: 80000,
     period: '/month',
-    listings: -1,
+    listings: 500,
+    featuredListings: 100,
     features: [
-      'Unlimited listings',
-      'All Professional features',
-      'Dedicated account manager',
-      'Custom branding',
-      'API access',
+      '500 property listings',
+      '100 featured listings',
       'Bulk upload tools',
       'Team collaboration (5 users)',
+      'API access',
+      'All Professional features',
     ],
-    cta: 'Contact Sales',
+    cta: 'Subscribe',
     highlighted: false,
   },
   {
     name: 'Enterprise',
-    price: 250000,
-    period: '/month',
+    planId: 'enterprise',
+    price: 0,
+    period: 'Custom pricing',
     listings: -1,
+    featuredListings: -1,
     features: [
       'Unlimited listings',
-      'All Business features',
+      'Unlimited featured listings',
       'White-label solution',
       'Custom integrations',
       'SLA guarantee',
@@ -79,4 +99,19 @@ export const PRICING_PLANS = [
     cta: 'Contact Sales',
     highlighted: false,
   },
-] as const
+]
+
+/**
+ * Get the plan config by planId
+ */
+export function getPlanByPlanId(planId: string): PricingPlan | undefined {
+  return PRICING_PLANS.find((p) => p.planId === planId)
+}
+
+/**
+ * Get the listing limit for a given plan. Returns -1 for unlimited.
+ */
+export function getListingLimit(planId: string): number {
+  const plan = getPlanByPlanId(planId)
+  return plan?.listings ?? 3 // default to free plan limit
+}

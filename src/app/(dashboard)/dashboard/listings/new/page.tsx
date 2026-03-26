@@ -1,22 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Save, AlertCircle, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Save, AlertCircle, CheckCircle, Loader2, ArrowUpCircle } from 'lucide-react'
 import Link from 'next/link'
 import { NIGERIAN_STATES } from '@/constants/states'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
+import { getListingLimit } from '@/constants/pricing'
 
 const PROPERTY_TYPES = ['house', 'apartment', 'land', 'commercial', 'development']
 const LISTING_TYPES = ['sale', 'rent', 'lease']
 
 export default function NewListingPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, profile, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [limitCheck, setLimitCheck] = useState<{
+    checking: boolean
+    atLimit: boolean
+    current: number
+    max: number
+  }>({ checking: true, atLimit: false, current: 0, max: 3 })
+
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -31,6 +39,38 @@ export default function NewListingPage() {
     area: '',
     features: '',
   })
+
+  // Check listing limits
+  useEffect(() => {
+    if (!user || !profile) return
+
+    const checkListingLimit = async () => {
+      const supabase = createClient()
+
+      // Get user's current property count
+      const { count } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+
+      // Determine plan — map 'basic' account_type to 'free' planId
+      const planId = profile.account_type === 'basic' ? 'free' : profile.account_type
+      const maxListings = getListingLimit(planId)
+
+      const currentCount = count ?? 0
+      // -1 means unlimited
+      const atLimit = maxListings !== -1 && currentCount >= maxListings
+
+      setLimitCheck({
+        checking: false,
+        atLimit,
+        current: currentCount,
+        max: maxListings,
+      })
+    }
+
+    checkListingLimit()
+  }, [user, profile])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -81,6 +121,46 @@ export default function NewListingPage() {
     }
   }
 
+  if (authLoading || limitCheck.checking) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
+      </div>
+    )
+  }
+
+  // Show upgrade prompt if at listing limit
+  if (limitCheck.atLimit) {
+    return (
+      <div>
+        <Link
+          href="/dashboard/listings"
+          className="mb-6 inline-flex items-center gap-2 text-sm text-gray-600 hover:text-brand-green-600"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to listings
+        </Link>
+
+        <div className="mx-auto max-w-lg text-center">
+          <div className="rounded-xl border-2 border-brand-gold-400 bg-brand-cream-50 p-8">
+            <ArrowUpCircle className="mx-auto h-12 w-12 text-brand-gold-500" />
+            <h2 className="mt-4 text-xl font-bold text-gray-900">Listing Limit Reached</h2>
+            <p className="mt-2 text-gray-600">
+              You&apos;ve used {limitCheck.current} of {limitCheck.max} listings available on your
+              current plan.
+            </p>
+            <p className="mt-1 text-sm text-gray-500">
+              Upgrade your plan to add more property listings.
+            </p>
+            <Link href="/dashboard/subscription" className="btn btn-primary mt-6 inline-block">
+              Upgrade Plan
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (success) {
     return (
       <div className="flex h-64 flex-col items-center justify-center">
@@ -103,7 +183,14 @@ export default function NewListingPage() {
       </Link>
 
       <h1 className="text-2xl font-bold text-gray-900">Add New Property</h1>
-      <p className="mt-1 text-gray-500">Fill in the details to list your property</p>
+      <p className="mt-1 text-gray-500">
+        Fill in the details to list your property
+        {limitCheck.max !== -1 && (
+          <span className="ml-2 text-xs text-gray-400">
+            ({limitCheck.current}/{limitCheck.max} listings used)
+          </span>
+        )}
+      </p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         {error && (

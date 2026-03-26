@@ -57,6 +57,10 @@ export interface Subscription {
   start_date: string
   end_date: string
   status: SubscriptionStatus
+  paystack_reference: string | null
+  paystack_subscription_code: string | null
+  paystack_customer_code: string | null
+  paystack_plan_code: string | null
   created_at: string
 }
 
