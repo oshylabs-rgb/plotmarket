@@ -123,6 +123,12 @@ export default function RegisterPage() {
               Sign in here
             </Link>
           </p>
+          <p className="mt-4 text-xs text-gray-400">
+            Need help?{' '}
+            <a href="mailto:arnold.oshenye@oshylabs.eu" className="text-brand-green-600 hover:underline">
+              arnold.oshenye@oshylabs.eu
+            </a>
+          </p>
         </div>
       </div>
     )

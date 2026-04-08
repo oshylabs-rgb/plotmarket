@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Plus,
+  Mail,
 } from 'lucide-react'
 import { Logo } from './Logo'
 import { createClient } from '@/lib/supabase/client'
@@ -89,7 +90,14 @@ export function DashboardSidebar() {
           })}
         </nav>
 
-        <div className="border-t border-brand-green-600 p-4">
+        <div className="border-t border-brand-green-600 p-4 space-y-1">
+          <a
+            href="mailto:arnold.oshenye@oshylabs.eu"
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brand-green-200 hover:bg-brand-green-600 hover:text-white transition-colors"
+          >
+            <Mail className="h-5 w-5" />
+            Support
+          </a>
           <button
             onClick={handleSignOut}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-brand-green-200 hover:bg-brand-green-600 hover:text-white transition-colors"
