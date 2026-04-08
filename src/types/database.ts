@@ -24,6 +24,8 @@ export interface Profile {
   user_type: UserType
   is_verified: boolean
   avatar_url: string | null
+  company_name: string | null
+  cac_number: string | null
   created_at: string
 }
 
@@ -42,6 +44,7 @@ export interface Property {
   bathrooms: number | null
   area: number | null
   images: string[]
+  videos: string[]
   features: string[]
   status: PropertyStatus
   is_featured: boolean

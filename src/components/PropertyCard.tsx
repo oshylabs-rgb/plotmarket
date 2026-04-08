@@ -12,15 +12,23 @@ export function PropertyCard({ property }: { property: Property }) {
       className="group block overflow-hidden rounded-xl border border-brand-cream-300 bg-white shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5"
     >
       {/* Image / Gradient placeholder */}
-      <div className={`relative h-48 bg-gradient-to-br ${gradient}`}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white/80">
-            <Maximize className="mx-auto h-8 w-8 mb-1" />
-            <span className="text-xs font-medium">
-              {property.area ? `${property.area} m²` : 'View Details'}
-            </span>
+      <div className={`relative h-48 ${property.images && property.images.length > 0 ? 'bg-gray-200' : `bg-gradient-to-br ${gradient}`}`}>
+        {property.images && property.images.length > 0 ? (
+          <img
+            src={property.images[0]}
+            alt={property.title}
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center text-white/80">
+              <Maximize className="mx-auto h-8 w-8 mb-1" />
+              <span className="text-xs font-medium">
+                {property.area ? `${property.area} m²` : 'View Details'}
+              </span>
+            </div>
           </div>
-        </div>
+        )}
         {/* Badges */}
         <div className="absolute left-3 top-3 flex gap-2">
           <span className="rounded-full bg-white/90 px-2.5 py-0.5 text-xs font-semibold capitalize text-gray-800">

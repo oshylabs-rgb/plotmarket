@@ -8,6 +8,7 @@ import { NIGERIAN_STATES } from '@/constants/states'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { getListingLimit } from '@/constants/pricing'
+import { MediaUpload } from '@/components/MediaUpload'
 
 const PROPERTY_TYPES = ['house', 'apartment', 'land', 'commercial', 'development']
 const LISTING_TYPES = ['sale', 'rent', 'lease']
@@ -18,6 +19,9 @@ export default function NewListingPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [uploadPropertyId] = useState(() => crypto.randomUUID())
+  const [mediaImages, setMediaImages] = useState<string[]>([])
+  const [mediaVideos, setMediaVideos] = useState<string[]>([])
   const [limitCheck, setLimitCheck] = useState<{
     checking: boolean
     atLimit: boolean
@@ -106,7 +110,8 @@ export default function NewListingPage() {
       bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
       bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
       area: form.area ? parseInt(form.area) : null,
-      images: [],
+      images: mediaImages,
+      videos: mediaVideos,
       features: featuresArray,
     })
 
@@ -258,6 +263,26 @@ export default function NewListingPage() {
             </div>
           </div>
         </div>
+
+        {/* Media Upload */}
+        {user && (
+          <div className="rounded-xl border border-brand-cream-300 bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900">Photos & Videos</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              Upload images and videos of your property. The first image will be the cover photo.
+            </p>
+            <div className="mt-4">
+              <MediaUpload
+                userId={user.id}
+                propertyId={uploadPropertyId}
+                onUploadComplete={(images, videos) => {
+                  setMediaImages(images)
+                  setMediaVideos(videos)
+                }}
+              />
+            </div>
+          </div>
+        )}
 
         {/* Location */}
         <div className="rounded-xl border border-brand-cream-300 bg-white p-6 shadow-sm">

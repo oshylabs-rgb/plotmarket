@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { User, Mail, Phone, Lock, Save, Shield, Building2, Users, Loader2 } from 'lucide-react'
+import { User, Mail, Phone, Lock, Save, Shield, Building2, Users, Loader2, FileText } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 
@@ -13,7 +13,7 @@ const USER_TYPE_LABELS: Record<string, { label: string; icon: typeof User }> = {
 
 export default function ProfilePage() {
   const { user, profile, loading: authLoading } = useAuth()
-  const [form, setForm] = useState({ full_name: '', phone: '' })
+  const [form, setForm] = useState({ full_name: '', phone: '', company_name: '', cac_number: '' })
   const [initialized, setInitialized] = useState(false)
   const [passwordForm, setPasswordForm] = useState({
     new_password: '',
@@ -30,6 +30,8 @@ export default function ProfilePage() {
     setForm({
       full_name: profile.full_name || '',
       phone: profile.phone || '',
+      company_name: profile.company_name || '',
+      cac_number: profile.cac_number || '',
     })
     setInitialized(true)
   }
@@ -49,13 +51,17 @@ export default function ProfilePage() {
     setSaving(true)
     const supabase = createClient()
 
-    await supabase
-      .from('profiles')
-      .update({
-        full_name: form.full_name,
-        phone: form.phone,
-      })
-      .eq('id', user.id)
+    const updateData: Record<string, string | null> = {
+      full_name: form.full_name,
+      phone: form.phone,
+    }
+
+    if (showCompanyFields) {
+      updateData.company_name = form.company_name || null
+      updateData.cac_number = form.cac_number || null
+    }
+
+    await supabase.from('profiles').update(updateData).eq('id', user.id)
 
     setSaving(false)
     setSaved(true)
@@ -103,6 +109,7 @@ export default function ProfilePage() {
 
   const userTypeInfo = USER_TYPE_LABELS[profile?.user_type || 'individual']
   const TypeIcon = userTypeInfo?.icon || User
+  const showCompanyFields = profile?.user_type === 'agent' || profile?.user_type === 'developer'
 
   return (
     <div>
@@ -187,6 +194,43 @@ export default function ProfilePage() {
                 />
                 <p className="mt-1 text-xs text-gray-400">Email cannot be changed</p>
               </div>
+
+              {showCompanyFields && (
+                <>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      <span className="flex items-center gap-1.5">
+                        <Building2 className="h-3.5 w-3.5 text-gray-400" />
+                        Company Name
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      name="company_name"
+                      value={form.company_name}
+                      onChange={handleChange}
+                      placeholder="Enter company name"
+                      className="input-field"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700">
+                      <span className="flex items-center gap-1.5">
+                        <FileText className="h-3.5 w-3.5 text-gray-400" />
+                        CAC Registration Number
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      name="cac_number"
+                      value={form.cac_number}
+                      onChange={handleChange}
+                      placeholder="e.g., RC-123456"
+                      className="input-field"
+                    />
+                  </div>
+                </>
+              )}
             </div>
 
             <button type="submit" disabled={saving} className="btn btn-primary mt-6 disabled:opacity-50">

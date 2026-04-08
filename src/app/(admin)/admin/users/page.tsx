@@ -74,6 +74,7 @@ export default function AdminUsersPage() {
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">User</th>
               <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">Role</th>
               <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:table-cell">Type</th>
+              <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 lg:table-cell">Company</th>
               <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:table-cell">Plan</th>
               <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 md:table-cell">Verified</th>
               <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 md:table-cell">Joined</th>
@@ -104,9 +105,22 @@ export default function AdminUsersPage() {
                   </span>
                 </td>
                 <td className="hidden px-4 py-3 sm:table-cell">
-                  <span className="rounded-full bg-brand-cream-100 px-2.5 py-0.5 text-xs font-medium capitalize text-gray-700">
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ${
+                    user.user_type === 'agent'
+                      ? 'bg-blue-100 text-blue-700'
+                      : user.user_type === 'developer'
+                        ? 'bg-amber-100 text-amber-700'
+                        : 'bg-brand-cream-100 text-gray-700'
+                  }`}>
                     {user.user_type || 'individual'}
                   </span>
+                </td>
+                <td className="hidden px-4 py-3 lg:table-cell">
+                  {user.company_name ? (
+                    <span className="text-sm text-gray-700">{user.company_name}</span>
+                  ) : (
+                    <span className="text-sm text-gray-400">—</span>
+                  )}
                 </td>
                 <td className="hidden px-4 py-3 sm:table-cell">
                   <span className="rounded-full bg-brand-green-100 px-2.5 py-0.5 text-xs font-medium capitalize text-brand-green-700">

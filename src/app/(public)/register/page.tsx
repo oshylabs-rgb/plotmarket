@@ -2,29 +2,42 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Mail, Lock, Eye, EyeOff, User, Phone, UserPlus, CheckCircle, Building2, Users, Briefcase } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, Phone, UserPlus, CheckCircle, Building2, Briefcase, FileText } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
 import type { UserType } from '@/types/database'
 
-const USER_TYPES: { value: UserType; label: string; description: string; icon: typeof User }[] = [
+const USER_TYPES: {
+  value: UserType
+  label: string
+  subtitle: string
+  description: string
+  icon: typeof User
+  requirements: string[]
+}[] = [
   {
     value: 'individual',
     label: 'Individual',
-    description: 'I want to buy, sell, or rent my own property',
+    subtitle: 'Property Owner / Buyer',
+    description: 'Buy, sell, or rent your own property',
     icon: User,
+    requirements: ['Valid email', 'Phone number'],
   },
   {
     value: 'agent',
     label: 'Agent',
-    description: 'I am a real estate agent listing properties for clients',
-    icon: Users,
+    subtitle: 'Real Estate Agent',
+    description: 'List and manage properties for clients',
+    icon: Briefcase,
+    requirements: ['Company/Agency name', 'Valid email', 'Phone number', 'CAC number optional'],
   },
   {
     value: 'developer',
     label: 'Developer',
-    description: 'I am a property developer listing new developments',
+    subtitle: 'Property Developer',
+    description: 'List new developments and off-plan properties',
     icon: Building2,
+    requirements: ['Company name', 'Valid email', 'Phone number', 'CAC number required'],
   },
 ]
 
@@ -33,16 +46,26 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [companyName, setCompanyName] = useState('')
+  const [cacNumber, setCacNumber] = useState('')
   const [userType, setUserType] = useState<UserType>('individual')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
+  const showCompanyFields = userType === 'agent' || userType === 'developer'
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    if (userType === 'developer' && !cacNumber.trim()) {
+      setError('CAC Registration Number is required for Property Developers')
+      setLoading(false)
+      return
+    }
 
     const supabase = createClient()
     const { error } = await supabase.auth.signUp({
@@ -54,6 +77,10 @@ export default function RegisterPage() {
           full_name: fullName,
           phone,
           user_type: userType,
+          ...(showCompanyFields && {
+            company_name: companyName,
+            cac_number: cacNumber || null,
+          }),
         },
       },
     })
@@ -103,7 +130,7 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-2xl">
         <div className="text-center">
           <div className="flex justify-center">
             <Logo />
@@ -114,19 +141,19 @@ export default function RegisterPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           {error && (
             <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           )}
 
-          {/* User Type Selection */}
+          {/* User Type Selection Cards */}
           <div>
-            <label className="mb-2 block text-sm font-medium text-gray-700">
-              I am a...
+            <label className="mb-3 block text-sm font-semibold text-gray-700">
+              How will you use Plotmarket?
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid gap-3 sm:grid-cols-3">
               {USER_TYPES.map((type) => {
                 const Icon = type.icon
                 const isSelected = userType === type.value
@@ -135,100 +162,180 @@ export default function RegisterPage() {
                     key={type.value}
                     type="button"
                     onClick={() => setUserType(type.value)}
-                    className={`flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 text-center transition-all ${
+                    className={`relative flex flex-col rounded-xl border-2 p-4 text-left transition-all ${
                       isSelected
-                        ? 'border-brand-green-500 bg-brand-green-50 text-brand-green-700'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                        ? 'border-brand-green-500 bg-brand-green-50 shadow-sm'
+                        : 'border-brand-cream-300 bg-white hover:border-brand-green-200 hover:bg-brand-cream-50'
                     }`}
                   >
-                    <Icon className={`h-5 w-5 ${isSelected ? 'text-brand-green-600' : 'text-gray-400'}`} />
-                    <span className="text-xs font-semibold">{type.label}</span>
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                          isSelected ? 'bg-brand-green-600 text-white' : 'bg-brand-cream-200 text-gray-500'
+                        }`}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className={`text-sm font-bold ${isSelected ? 'text-brand-green-700' : 'text-gray-900'}`}>
+                          {type.label}
+                        </p>
+                        <p className="text-xs text-gray-500">{type.subtitle}</p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs text-gray-600">{type.description}</p>
+                    <div className="mt-3 border-t border-dashed border-gray-200 pt-3">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                        Requirements
+                      </p>
+                      <ul className="mt-1.5 space-y-1">
+                        {type.requirements.map((req) => (
+                          <li key={req} className="flex items-center gap-1.5 text-[11px] text-gray-500">
+                            <span className={`h-1 w-1 rounded-full ${isSelected ? 'bg-brand-green-500' : 'bg-gray-300'}`} />
+                            {req}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    {isSelected && (
+                      <div className="absolute -top-1.5 right-3 rounded-full bg-brand-green-600 px-2 py-0.5 text-[10px] font-semibold text-white">
+                        Selected
+                      </div>
+                    )}
                   </button>
                 )
               })}
             </div>
-            <p className="mt-1.5 text-xs text-gray-400">
-              {USER_TYPES.find((t) => t.value === userType)?.description}
-            </p>
           </div>
 
-          <div>
-            <label htmlFor="fullName" className="mb-1 block text-sm font-medium text-gray-700">
-              Full Name
-            </label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter your full name"
-                className="input-field pl-10"
-                required
-              />
+          {/* Form Fields */}
+          <div className="space-y-4 rounded-xl border border-brand-cream-300 bg-white p-5">
+            <div>
+              <label htmlFor="fullName" className="mb-1 block text-sm font-medium text-gray-700">
+                Full Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  id="fullName"
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="Enter your full name"
+                  className="input-field pl-10"
+                  required
+                />
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="input-field pl-10"
-                required
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label htmlFor="email" className="mb-1 block text-sm font-medium text-gray-700">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="input-field pl-10"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="phone" className="mb-1 block text-sm font-medium text-gray-700">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+234 xxx xxx xxxx"
+                    className="input-field pl-10"
+                    required
+                  />
+                </div>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="phone" className="mb-1 block text-sm font-medium text-gray-700">
-              Phone Number
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                id="phone"
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+234 xxx xxx xxxx"
-                className="input-field pl-10"
-                required
-              />
-            </div>
-          </div>
+            {/* Company fields for agent/developer */}
+            {showCompanyFields && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="companyName" className="mb-1 block text-sm font-medium text-gray-700">
+                    Company / Agency Name
+                  </label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      id="companyName"
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="Enter company name"
+                      className="input-field pl-10"
+                      required
+                    />
+                  </div>
+                </div>
 
-          <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-              <input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Create a strong password"
-                className="input-field pl-10 pr-10"
-                required
-                minLength={6}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+                <div>
+                  <label htmlFor="cacNumber" className="mb-1 block text-sm font-medium text-gray-700">
+                    CAC Registration Number
+                    {userType === 'developer' ? (
+                      <span className="ml-1 text-red-500">*</span>
+                    ) : (
+                      <span className="ml-1 text-xs font-normal text-gray-400">(Optional)</span>
+                    )}
+                  </label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      id="cacNumber"
+                      type="text"
+                      value={cacNumber}
+                      onChange={(e) => setCacNumber(e.target.value)}
+                      placeholder="e.g., RC-123456"
+                      className="input-field pl-10"
+                      required={userType === 'developer'}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="password" className="mb-1 block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create a strong password"
+                  className="input-field pl-10 pr-10"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
           </div>
 

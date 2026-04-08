@@ -2,7 +2,7 @@
 
 import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, Bed, Bath, Maximize, Tag, Shield, Star, User, Phone, Mail, MessageSquare, Loader2, AlertCircle } from 'lucide-react'
+import { ArrowLeft, MapPin, Bed, Bath, Maximize, Tag, Shield, Star, User, Phone, Mail, MessageSquare, Loader2, AlertCircle, ChevronLeft, ChevronRight, Film } from 'lucide-react'
 import { formatNaira, getPropertyGradient } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -14,6 +14,7 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
   const [property, setProperty] = useState<Property | null>(null)
   const [agent, setAgent] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [currentImage, setCurrentImage] = useState(0)
   const [inquiryMessage, setInquiryMessage] = useState('')
   const [inquirySent, setInquirySent] = useState(false)
   const [inquiryError, setInquiryError] = useState('')
@@ -111,30 +112,124 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Main content */}
         <div className="lg:col-span-2">
-          {/* Image / Gradient */}
-          <div className={`relative h-64 overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} sm:h-80 lg:h-96`}>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center text-white/80">
-                <Maximize className="mx-auto h-16 w-16 mb-2" />
-                <span className="text-lg font-medium">
-                  {property.area ? `${property.area} m²` : 'Property Image'}
+          {/* Image Gallery / Gradient Fallback */}
+          {property.images && property.images.length > 0 ? (
+            <div className="relative h-64 overflow-hidden rounded-2xl bg-gray-200 sm:h-80 lg:h-96">
+              <img
+                src={property.images[currentImage]}
+                alt={`${property.title} - Image ${currentImage + 1}`}
+                className="h-full w-full object-cover"
+              />
+              {/* Prev/Next arrows */}
+              {property.images.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentImage((prev) =>
+                        prev === 0 ? property.images.length - 1 : prev - 1
+                      )
+                    }
+                    className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setCurrentImage((prev) =>
+                        prev === property.images.length - 1 ? 0 : prev + 1
+                      )
+                    }
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+              {/* Image counter */}
+              <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                {currentImage + 1} / {property.images.length}
+              </div>
+              {/* Badges */}
+              <div className="absolute left-4 top-4 flex gap-2">
+                <span className="rounded-full bg-white/90 px-3 py-1 text-sm font-semibold capitalize text-gray-800">
+                  {property.type}
+                </span>
+                <span className="rounded-full bg-brand-gold-400 px-3 py-1 text-sm font-semibold capitalize text-brand-green-900">
+                  For {property.listing_type}
                 </span>
               </div>
+              {property.is_featured && (
+                <span className="absolute right-4 top-4 rounded-full bg-brand-green-600 px-3 py-1 text-sm font-semibold text-white">
+                  Featured
+                </span>
+              )}
+              {/* Thumbnail strip */}
+              {property.images.length > 1 && (
+                <div className="absolute bottom-3 left-3 flex gap-1.5">
+                  {property.images.map((_, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setCurrentImage(idx)}
+                      className={`h-2 w-2 rounded-full transition-all ${
+                        idx === currentImage ? 'bg-white scale-125' : 'bg-white/50'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="absolute left-4 top-4 flex gap-2">
-              <span className="rounded-full bg-white/90 px-3 py-1 text-sm font-semibold capitalize text-gray-800">
-                {property.type}
-              </span>
-              <span className="rounded-full bg-brand-gold-400 px-3 py-1 text-sm font-semibold capitalize text-brand-green-900">
-                For {property.listing_type}
-              </span>
+          ) : (
+            <div className={`relative h-64 overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} sm:h-80 lg:h-96`}>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center text-white/80">
+                  <Maximize className="mx-auto h-16 w-16 mb-2" />
+                  <span className="text-lg font-medium">
+                    {property.area ? `${property.area} m²` : 'Property Image'}
+                  </span>
+                </div>
+              </div>
+              <div className="absolute left-4 top-4 flex gap-2">
+                <span className="rounded-full bg-white/90 px-3 py-1 text-sm font-semibold capitalize text-gray-800">
+                  {property.type}
+                </span>
+                <span className="rounded-full bg-brand-gold-400 px-3 py-1 text-sm font-semibold capitalize text-brand-green-900">
+                  For {property.listing_type}
+                </span>
+              </div>
+              {property.is_featured && (
+                <span className="absolute right-4 top-4 rounded-full bg-brand-green-600 px-3 py-1 text-sm font-semibold text-white">
+                  Featured
+                </span>
+              )}
             </div>
-            {property.is_featured && (
-              <span className="absolute right-4 top-4 rounded-full bg-brand-green-600 px-3 py-1 text-sm font-semibold text-white">
-                Featured
-              </span>
-            )}
-          </div>
+          )}
+
+          {/* Video Section */}
+          {property.videos && property.videos.length > 0 && (
+            <div className="mt-6">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                <Film className="h-5 w-5 text-brand-green-600" />
+                Property Videos
+              </h2>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                {property.videos.map((videoUrl, idx) => (
+                  <div key={idx} className="overflow-hidden rounded-xl border border-brand-cream-300">
+                    <video
+                      src={videoUrl}
+                      controls
+                      playsInline
+                      className="w-full"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Price & Title */}
           <div className="mt-6">
