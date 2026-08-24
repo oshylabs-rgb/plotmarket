@@ -6,8 +6,9 @@
 -- Idempotent: users are keyed by email, listings skipped if any '%Demo%'
 -- title already exists.
 --
--- The two 360 panoramas referenced below were uploaded to the property-media
--- bucket by hand: demo_360_interior.jpg and demo_360_plot.jpg.
+-- All images referenced below live in the property-media bucket: thirteen
+-- Laterite Light listing illustrations (pm-*.jpg) and two 360 panoramas
+-- (demo_360_interior.jpg, demo_360_plot.jpg), uploaded via the dashboard.
 
 do $$
 declare
@@ -56,51 +57,51 @@ begin
     (v_ind, 'Clean 2 Bedroom Flat, Surulere (Demo)',
      'Well kept two bedroom flat on a quiet street, five minutes from Adeniran Ogunsanya. Demo listing created to show the platform.',
      'apartment', 'rent', 1800000, 'Bode Thomas, Surulere', 'Lagos', 'Surulere',
-     2, 2, 85, array['https://picsum.photos/seed/pm-flat1/1200/800','https://picsum.photos/seed/pm-flat2/1200/800'],
+     2, 2, 85, array['https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-flat1.jpg','https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-flat2.jpg'],
      '{}', '{}', '{}', 'family_receipt', array['Prepaid meter','Water treatment','Gated street'],
      'approved', false, false),
     (v_ind, 'Half Plot of Family Land, Ikorodu (Demo)',
      'Dry half plot in a developing area, family receipt available for inspection. Demo listing created to show the platform.',
      'land', 'sale', 9500000, 'Agric, Ikorodu', 'Lagos', 'Ikorodu',
-     null, null, 300, array['https://picsum.photos/seed/pm-land1/1200/800'],
+     null, null, 300, array['https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-land1.jpg'],
      '{}', '{}', '{}', 'family_receipt', array['Dry land','Fenced'],
      'approved', false, false),
     (v_agt, 'Five Bedroom Detached Duplex with BQ, Lekki Phase 1 (Demo)',
      'Contemporary detached duplex with a room and parlour BQ, fitted kitchen and rooftop terrace. Take the 360 tour below. Demo listing created to show the platform.',
      'house', 'sale', 320000000, 'Admiralty Way, Lekki Phase 1', 'Lagos', 'Lekki',
-     5, 5, 620, array['https://picsum.photos/seed/pm-duplex1/1200/800','https://picsum.photos/seed/pm-duplex2/1200/800','https://picsum.photos/seed/pm-duplex3/1200/800'],
+     5, 5, 620, array['https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-duplex1.jpg','https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-duplex2.jpg','https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-duplex3.jpg'],
      '{}', array['https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/demo_360_interior.jpg'],
      '{}', 'c_of_o', array['Swimming pool','CCTV','Fitted kitchen','BQ','Rooftop terrace'],
      'approved', true, true),
     (v_agt, 'Serviced 3 Bedroom Apartment, Wuse 2 (Demo)',
      'Serviced apartment with uninterrupted power, in a secured estate close to the corporate district. Demo listing created to show the platform.',
      'apartment', 'rent', 7500000, 'Aminu Kano Crescent, Wuse 2', 'FCT Abuja', 'Abuja',
-     3, 3, 140, array['https://picsum.photos/seed/pm-wuse1/1200/800','https://picsum.photos/seed/pm-wuse2/1200/800'],
+     3, 3, 140, array['https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-wuse1.jpg','https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-wuse2.jpg'],
      '{}', '{}', '{}', 'governors_consent', array['24/7 power','Elevator','Gym','Concierge'],
      'approved', false, true),
     (v_agt, 'Open Plan Office Space, GRA Port Harcourt (Demo)',
      'Ground floor commercial space suitable for banking hall or showroom, generous parking. Demo listing created to show the platform.',
      'commercial', 'lease', 15000000, 'Aba Road, GRA Phase 2', 'Rivers', 'Port Harcourt',
-     null, 2, 450, array['https://picsum.photos/seed/pm-office1/1200/800'],
+     null, 2, 450, array['https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-office1.jpg'],
      '{}', '{}', '{}', 'deed_of_assignment', array['Generator house','Parking for 20 cars'],
      'approved', false, false),
     (v_dev, 'Crestline Court: 4 Bedroom Terraces, Sangotedo (Demo)',
      'Off plan terraces in a gated estate of 40 units, paved roads, central sewage and estate power. Completion Q4. Demo listing created to show the platform.',
      'development', 'sale', 95000000, 'Monastery Road, Sangotedo', 'Lagos', 'Ajah',
-     4, 4, 280, array['https://picsum.photos/seed/pm-estate1/1200/800','https://picsum.photos/seed/pm-estate2/1200/800'],
+     4, 4, 280, array['https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-estate1.jpg','https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-estate2.jpg'],
      '{}', '{}', '{}', 'excision', array['Gated estate','Estate power','Central sewage','Paved roads'],
      'approved', true, true),
     (v_dev, 'Serviced Residential Plots, Kuje Scheme (Demo)',
      'Corner piece plots inside a government approved scheme, gazette available. View the plot in 360 below. Demo listing created to show the platform.',
      'land', 'sale', 28000000, 'Kuje District', 'FCT Abuja', 'Kuje',
-     null, null, 600, array['https://picsum.photos/seed/pm-plots1/1200/800'],
+     null, null, 600, array['https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-plots1.jpg'],
      '{}', array['https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/demo_360_plot.jpg'],
      '{}', 'gazette', array['Corner piece','Survey beacons in place'],
      'approved', false, true),
     (v_dev, 'Ibadan Mixed Use Development, Bodija (Demo)',
      'Proposed mixed use development, awaiting review. Demo listing created to show the platform, and to show the admin approval queue.',
      'development', 'sale', 150000000, 'Awolowo Avenue, Bodija', 'Oyo', 'Ibadan',
-     null, null, 1200, array['https://picsum.photos/seed/pm-mixed1/1200/800'],
+     null, null, 1200, array['https://lmfsqfwdgxlsuozxyauy.supabase.co/storage/v1/object/public/property-media/pm-mixed1.jpg'],
      '{}', '{}', '{}', 'registered_survey', array['Corner piece'],
      'pending', false, false);
 
