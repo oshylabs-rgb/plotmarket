@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { X, ArrowRight, ArrowLeft, Building2, Search, MessageSquare, CreditCard, UserCircle, Plus, Sparkles } from 'lucide-react'
+import { X, ArrowRight, ArrowLeft, Building2, Search, MessageSquare, Plus, Sparkles } from 'lucide-react'
 
 const TOUR_STEPS = [
   {
@@ -12,7 +12,7 @@ const TOUR_STEPS = [
   },
   {
     title: 'Your Dashboard Overview',
-    description: 'Here you can see your key statistics at a glance — your total listings, inquiries received, subscription status, and active listings.',
+    description: 'Your key numbers at a glance: total listings, inquiries received, subscription status and active listings.',
     icon: Building2,
     target: 'tour-stats',
   },
@@ -36,7 +36,7 @@ const TOUR_STEPS = [
   },
   {
     title: 'Add Your First Property',
-    description: 'Ready to get started? Click "Add New Property" to create your first listing. Fill in the details — title, description, price, location, and property features — and submit it for review.',
+    description: 'Click "Add New Property" to create your first listing. Fill in the title, description, price, location, title document and photos, then submit it for review.',
     icon: Building2,
     target: null,
   },

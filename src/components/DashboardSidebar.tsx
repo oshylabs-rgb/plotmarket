@@ -42,7 +42,9 @@ export function DashboardSidebar() {
       {/* Mobile toggle */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="fixed left-4 top-4 z-50 rounded-lg bg-brand-green-700 p-2 text-white shadow-lg md:hidden"
+        aria-label={collapsed ? 'Close menu' : 'Open menu'}
+        aria-expanded={collapsed}
+        className="fixed left-4 top-4 z-50 flex h-11 w-11 items-center justify-center rounded-lg bg-brand-green-700 text-white shadow-lg md:hidden"
       >
         {collapsed ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>

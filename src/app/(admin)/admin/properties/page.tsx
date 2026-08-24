@@ -13,6 +13,7 @@ export default function AdminPropertiesPage() {
   const [statusFilter, setStatusFilter] = useState<string>('')
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
+  const [actionError, setActionError] = useState('')
 
   useEffect(() => {
     const fetchProperties = async () => {
@@ -29,9 +30,17 @@ export default function AdminPropertiesPage() {
     fetchProperties()
   }, [])
 
+  // Every write below is checked before the table is updated. Row level
+  // security denies silently, so an unchecked write would leave the panel
+  // showing a change that never reached the database.
   const handleStatusChange = async (id: string, status: string) => {
     const supabase = createClient()
-    await supabase.from('properties').update({ status }).eq('id', id)
+    const { error } = await supabase.from('properties').update({ status }).eq('id', id)
+    if (error) {
+      setActionError(`Could not update that listing. ${error.message}`)
+      return
+    }
+    setActionError('')
     setProperties((prev) =>
       prev.map((p) => (p.id === id ? { ...p, status: status as Property['status'] } : p))
     )
@@ -39,7 +48,15 @@ export default function AdminPropertiesPage() {
 
   const handleToggleFeatured = async (id: string, currentlyFeatured: boolean) => {
     const supabase = createClient()
-    await supabase.from('properties').update({ is_featured: !currentlyFeatured }).eq('id', id)
+    const { error } = await supabase
+      .from('properties')
+      .update({ is_featured: !currentlyFeatured })
+      .eq('id', id)
+    if (error) {
+      setActionError(`Could not change the featured flag. ${error.message}`)
+      return
+    }
+    setActionError('')
     setProperties((prev) =>
       prev.map((p) => (p.id === id ? { ...p, is_featured: !currentlyFeatured } : p))
     )
@@ -48,7 +65,19 @@ export default function AdminPropertiesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this property?')) return
     const supabase = createClient()
-    await supabase.from('properties').delete().eq('id', id)
+    const { error, count } = await supabase
+      .from('properties')
+      .delete({ count: 'exact' })
+      .eq('id', id)
+    if (error || count === 0) {
+      setActionError(
+        error
+          ? `Could not delete that listing. ${error.message}`
+          : 'Nothing was deleted. Check that migration 0003 has been applied and that this account has the admin role.'
+      )
+      return
+    }
+    setActionError('')
     setProperties((prev) => prev.filter((p) => p.id !== id))
   }
 
@@ -97,6 +126,15 @@ export default function AdminPropertiesPage() {
       </div>
 
       {/* Table */}
+      {actionError && (
+        <div
+          role="alert"
+          className="mt-4 rounded-lg border border-danger-600 bg-danger-50 px-4 py-3 text-sm text-danger-700"
+        >
+          {actionError}
+        </div>
+      )}
+
       <div className="mt-6 overflow-x-auto rounded-xl border border-brand-cream-300 bg-white shadow-sm">
         <table className="w-full">
           <thead>
@@ -115,7 +153,7 @@ export default function AdminPropertiesPage() {
               <tr key={property.id} className="hover:bg-brand-cream-50 transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-green-500 to-brand-green-400 shrink-0" />
+                    <div className="h-10 w-10 shrink-0 rounded-md border border-brand-cream-300 bg-brand-cream-200" />
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">{property.title}</p>
                       <p className="text-xs text-gray-500">{property.state}</p>

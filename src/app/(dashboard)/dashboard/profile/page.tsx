@@ -21,6 +21,7 @@ export default function ProfilePage() {
   })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [passwordSaving, setPasswordSaving] = useState(false)
   const [passwordError, setPasswordError] = useState('')
   const [passwordSaved, setPasswordSaved] = useState(false)
@@ -61,9 +62,15 @@ export default function ProfilePage() {
       updateData.cac_number = form.cac_number || null
     }
 
-    await supabase.from('profiles').update(updateData).eq('id', user.id)
+    const { error } = await supabase.from('profiles').update(updateData).eq('id', user.id)
 
     setSaving(false)
+    if (error) {
+      // Without this the form claims "Saved" even when nothing was written.
+      setSaveError(error.message)
+      return
+    }
+    setSaveError('')
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }
@@ -160,6 +167,15 @@ export default function ProfilePage() {
             {saved && (
               <div className="mt-4 rounded-lg bg-brand-green-50 px-4 py-3 text-sm text-brand-green-700">
                 Profile updated successfully!
+              </div>
+            )}
+
+            {saveError && (
+              <div
+                role="alert"
+                className="mt-4 rounded-lg border border-danger-600 bg-danger-50 px-4 py-3 text-sm text-danger-700"
+              >
+                {saveError}
               </div>
             )}
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Search, Shield, ShieldOff, UserCheck, UserX, Loader2 } from 'lucide-react'
+import { Search, Shield, ShieldOff, UserCheck, Trash2, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/types/database'
@@ -10,6 +10,8 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState('')
   const [users, setUsers] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
+  const [actionError, setActionError] = useState('')
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -26,12 +28,52 @@ export default function AdminUsersPage() {
     fetchUsers()
   }, [])
 
+  // Checked before the table updates. Row level security denies silently, so
+  // an unchecked write would show a change that never reached the database.
   const handleVerify = async (userId: string, currentlyVerified: boolean) => {
     const supabase = createClient()
-    await supabase.from('profiles').update({ is_verified: !currentlyVerified }).eq('id', userId)
+    const { error } = await supabase
+      .from('profiles')
+      .update({ is_verified: !currentlyVerified })
+      .eq('id', userId)
+    if (error) {
+      setActionError(`Could not update that account. ${error.message}`)
+      return
+    }
+    setActionError('')
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, is_verified: !currentlyVerified } : u))
     )
+  }
+
+  // Deleting goes through a route handler rather than the browser client. It
+  // has to remove the auth.users row, and only the service role key can do
+  // that, so it can never be done from here.
+  const handleDelete = async (user: Profile) => {
+    const label = user.full_name || user.email
+    if (
+      !confirm(
+        `Delete ${label}? This removes their account, their listings and their uploaded media. It cannot be undone.`
+      )
+    ) {
+      return
+    }
+
+    setDeletingId(user.id)
+    try {
+      const response = await fetch(`/api/admin/users/${user.id}`, { method: 'DELETE' })
+      const data = await response.json()
+      if (!response.ok) {
+        setActionError(data.error || 'Could not delete that account.')
+        return
+      }
+      setActionError('')
+      setUsers((prev) => prev.filter((u) => u.id !== user.id))
+    } catch {
+      setActionError('Could not reach the server. Try again.')
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   const filteredUsers = users.filter((u) =>
@@ -67,6 +109,15 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Users Table */}
+      {actionError && (
+        <div
+          role="alert"
+          className="mt-4 rounded-lg border border-danger-600 bg-danger-50 px-4 py-3 text-sm text-danger-700"
+        >
+          {actionError}
+        </div>
+      )}
+
       <div className="mt-6 overflow-x-auto rounded-xl border border-brand-cream-300 bg-white shadow-sm">
         <table className="w-full">
           <thead>
@@ -145,11 +196,27 @@ export default function AdminUsersPage() {
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => handleVerify(user.id, user.is_verified)}
-                      className="rounded-lg p-2 text-gray-400 hover:bg-brand-green-50 hover:text-brand-green-600"
+                      aria-label={user.is_verified ? 'Unverify account' : 'Verify account'}
+                      className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 hover:bg-brand-green-50 hover:text-brand-green-600"
                       title={user.is_verified ? 'Unverify' : 'Verify'}
                     >
                       <UserCheck className="h-4 w-4" />
                     </button>
+                    {user.role !== 'admin' && (
+                      <button
+                        onClick={() => handleDelete(user)}
+                        disabled={deletingId === user.id}
+                        aria-label="Delete account"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 hover:bg-danger-50 hover:text-danger-600 disabled:opacity-50"
+                        title="Delete account"
+                      >
+                        {deletingId === user.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

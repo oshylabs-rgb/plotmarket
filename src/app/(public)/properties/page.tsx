@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Search, SlidersHorizontal, X, Loader2 } from 'lucide-react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Search, SlidersHorizontal, X, Loader2, Rotate3d } from 'lucide-react'
 import { PropertyCard } from '@/components/PropertyCard'
 import { NIGERIAN_STATES } from '@/constants/states'
-import { PropertyType, ListingType } from '@/types/database'
+import { PropertyType, ListingType, TITLE_DOCUMENT_LABELS, type TitleDocumentType } from '@/types/database'
 import { createClient } from '@/lib/supabase/client'
 import type { Property } from '@/types/database'
 
@@ -22,14 +23,21 @@ const LISTING_TYPES: { value: ListingType; label: string }[] = [
   { value: 'lease', label: 'For Lease' },
 ]
 
-export default function PropertiesPage() {
-  const [search, setSearch] = useState('')
-  const [type, setType] = useState<string>('')
+const TITLE_DOCUMENTS = Object.keys(TITLE_DOCUMENT_LABELS).filter(
+  (d) => d !== 'unknown'
+) as TitleDocumentType[]
+
+function PropertiesBrowser() {
+  const searchParams = useSearchParams()
+  const [search, setSearch] = useState(searchParams.get('q') ?? '')
+  const [type, setType] = useState<string>(searchParams.get('type') ?? '')
   const [listingType, setListingType] = useState<string>('')
-  const [state, setState] = useState<string>('')
+  const [state, setState] = useState<string>(searchParams.get('state') ?? '')
   const [minPrice, setMinPrice] = useState<string>('')
   const [maxPrice, setMaxPrice] = useState<string>('')
   const [bedrooms, setBedrooms] = useState<string>('')
+  const [titleDocument, setTitleDocument] = useState<string>('')
+  const [only360, setOnly360] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
@@ -52,13 +60,25 @@ export default function PropertiesPage() {
   }, [])
 
   const filteredProperties = properties.filter((p) => {
-    if (search && !p.title.toLowerCase().includes(search.toLowerCase()) && !p.location?.toLowerCase().includes(search.toLowerCase())) return false
+    if (search) {
+      const needle = search.toLowerCase()
+      const haystack = [p.title, p.location, p.city, p.state, p.description]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+      // Every word in the query must appear somewhere, so "3 bedroom lekki" works.
+      if (!needle.split(/\s+/).every((word) => haystack.includes(word))) return false
+    }
     if (type && p.type !== type) return false
     if (listingType && p.listing_type !== listingType) return false
     if (state && p.state !== state) return false
     if (minPrice && p.price < Number(minPrice)) return false
     if (maxPrice && p.price > Number(maxPrice)) return false
-    if (bedrooms && p.bedrooms !== Number(bedrooms)) return false
+    // Bedrooms is presented as "N+", so match on at-least.
+    if (bedrooms && (p.bedrooms ?? 0) < Number(bedrooms)) return false
+    if (titleDocument && p.title_document !== titleDocument) return false
+    if (only360 && (p.images_360?.length ?? 0) === 0 && (p.videos_360?.length ?? 0) === 0)
+      return false
     return true
   })
 
@@ -70,9 +90,12 @@ export default function PropertiesPage() {
     setMinPrice('')
     setMaxPrice('')
     setBedrooms('')
+    setTitleDocument('')
+    setOnly360(false)
   }
 
-  const hasFilters = type || listingType || state || minPrice || maxPrice || bedrooms
+  const hasFilters =
+    type || listingType || state || minPrice || maxPrice || bedrooms || titleDocument || only360
 
   if (loading) {
     return (
@@ -88,9 +111,9 @@ export default function PropertiesPage() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Browse Properties</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Browse properties</h1>
         <p className="mt-2 text-gray-500">
-          Discover verified properties across Nigeria
+          Filter by title document to see only listings with the paperwork you will accept.
         </p>
       </div>
 
@@ -102,7 +125,8 @@ export default function PropertiesPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by title or location..."
+            placeholder="Try “3 bedroom Lekki” or “land Abuja”"
+            aria-label="Search properties"
             className="input-field pl-10"
           />
         </div>
@@ -175,6 +199,33 @@ export default function PropertiesPage() {
                 ))}
               </select>
             </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-sm font-medium text-gray-700">Title document</label>
+              <select
+                value={titleDocument}
+                onChange={(e) => setTitleDocument(e.target.value)}
+                className="input-field"
+              >
+                <option value="">Any title</option>
+                {TITLE_DOCUMENTS.map((doc) => (
+                  <option key={doc} value={doc}>
+                    {TITLE_DOCUMENT_LABELS[doc]}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-end">
+              <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-brand-cream-400 bg-white px-3 py-2.5 text-sm text-gray-700 hover:border-brand-green-300">
+                <input
+                  type="checkbox"
+                  checked={only360}
+                  onChange={(e) => setOnly360(e.target.checked)}
+                  className="h-4 w-4 accent-brand-green-600"
+                />
+                <Rotate3d className="h-4 w-4 text-brand-green-600" />
+                Has 360° tour
+              </label>
+            </div>
           </div>
           {hasFilters && (
             <button
@@ -216,5 +267,25 @@ export default function PropertiesPage() {
         </div>
       )}
     </div>
+  )
+}
+
+/**
+ * useSearchParams requires a Suspense boundary, otherwise the App Router
+ * prerender step fails the build.
+ */
+export default function PropertiesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
+          </div>
+        </div>
+      }
+    >
+      <PropertiesBrowser />
+    </Suspense>
   )
 }

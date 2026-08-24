@@ -8,10 +8,12 @@ import { NIGERIAN_STATES } from '@/constants/states'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { getListingLimit } from '@/constants/pricing'
-import { MediaUpload } from '@/components/MediaUpload'
+import { MediaUpload, type MediaUploadResult } from '@/components/MediaUpload'
+import { TITLE_DOCUMENT_LABELS, type TitleDocumentType } from '@/types/database'
 
 const PROPERTY_TYPES = ['house', 'apartment', 'land', 'commercial', 'development']
 const LISTING_TYPES = ['sale', 'rent', 'lease']
+const TITLE_DOCUMENTS = Object.keys(TITLE_DOCUMENT_LABELS) as TitleDocumentType[]
 
 export default function NewListingPage() {
   const router = useRouter()
@@ -20,8 +22,13 @@ export default function NewListingPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [uploadPropertyId] = useState(() => crypto.randomUUID())
-  const [mediaImages, setMediaImages] = useState<string[]>([])
-  const [mediaVideos, setMediaVideos] = useState<string[]>([])
+  const [media, setMedia] = useState<MediaUploadResult>({
+    images: [],
+    videos: [],
+    images360: [],
+    videos360: [],
+  })
+  const [mediaBusy, setMediaBusy] = useState(false)
   const [limitCheck, setLimitCheck] = useState<{
     checking: boolean
     atLimit: boolean
@@ -42,6 +49,7 @@ export default function NewListingPage() {
     bathrooms: '',
     area: '',
     features: '',
+    title_document: 'unknown',
   })
 
   // Check listing limits
@@ -87,6 +95,11 @@ export default function NewListingPage() {
       return
     }
 
+    if (mediaBusy) {
+      setError('Your photos are still uploading. Give it a moment, then save.')
+      return
+    }
+
     setLoading(true)
     setError('')
 
@@ -110,8 +123,11 @@ export default function NewListingPage() {
       bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
       bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
       area: form.area ? parseInt(form.area) : null,
-      images: mediaImages,
-      videos: mediaVideos,
+      images: media.images,
+      videos: media.videos,
+      images_360: media.images360,
+      videos_360: media.videos360,
+      title_document: form.title_document,
       features: featuresArray,
     })
 
@@ -267,22 +283,49 @@ export default function NewListingPage() {
         {/* Media Upload */}
         {user && (
           <div className="rounded-xl border border-brand-cream-300 bg-white p-6 shadow-sm">
-            <h2 className="text-lg font-semibold text-gray-900">Photos & Videos</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Photos, videos and 360° tours</h2>
             <p className="mt-1 text-sm text-gray-500">
-              Upload images and videos of your property. The first image will be the cover photo.
+              Listings with photos get far more serious enquiries. The first photo is the cover.
             </p>
             <div className="mt-4">
               <MediaUpload
                 userId={user.id}
                 propertyId={uploadPropertyId}
-                onUploadComplete={(images, videos) => {
-                  setMediaImages(images)
-                  setMediaVideos(videos)
-                }}
+                onChange={setMedia}
+                onBusyChange={setMediaBusy}
               />
             </div>
           </div>
         )}
+
+        {/* Title / documentation */}
+        <div className="rounded-xl border border-brand-cream-300 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-semibold text-gray-900">Title document</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            Buyers filter on this. Listings that state a title get taken seriously.
+          </p>
+          <div className="mt-4">
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              What title is available for this property?
+            </label>
+            <select
+              name="title_document"
+              value={form.title_document}
+              onChange={handleChange}
+              className="input-field"
+            >
+              {TITLE_DOCUMENTS.map((doc) => (
+                <option key={doc} value={doc}>
+                  {TITLE_DOCUMENT_LABELS[doc]}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-xs text-gray-500">
+              State only what you genuinely hold. Plotmarket does not verify title documents, and
+              knowingly misstating one can expose you to liability under the Land Use Act.
+            </p>
+          </div>
+        </div>
 
         {/* Location */}
         <div className="rounded-xl border border-brand-cream-300 bg-white p-6 shadow-sm">
@@ -379,11 +422,11 @@ export default function NewListingPage() {
         <div className="flex items-center gap-3">
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || mediaBusy}
             className="btn btn-primary disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
-            {loading ? 'Saving...' : 'Save Property'}
+            {loading ? 'Saving...' : mediaBusy ? 'Waiting for uploads...' : 'Save Property'}
           </button>
           <Link href="/dashboard/listings" className="btn btn-outline">
             Cancel

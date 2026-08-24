@@ -1,49 +1,166 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   Plotmarket design tokens — direction: "Registry"
+   Ink on paper, hairline rules, one restrained accent. The reference points
+   are a land registry file and a title deed, not a consumer app. Bright
+   flag-green and yellow gold are deliberately gone: on a market where buyers
+   are scanning for fraud, saturation reads as cheap.
+
+   Existing brand-* names are kept so every screen repalettes at once. Treat
+   them as semantic: brand-green = accent, brand-cream = paper, brand-gold =
+   caution only.
+   ========================================================================== */
+
 @theme inline {
-  --color-brand-green-50: #f0faf4;
-  --color-brand-green-100: #d1f0de;
-  --color-brand-green-200: #a3e1bd;
-  --color-brand-green-300: #5ec990;
-  --color-brand-green-400: #2eaa64;
-  --color-brand-green-500: #1a7a45;
-  --color-brand-green-600: #14613a;
-  --color-brand-green-700: #0f4d2e;
-  --color-brand-green-800: #0b3a23;
-  --color-brand-green-900: #082917;
+  /* --- Accent: deep verdigris. Land, register ink, permanence. ---------- */
+  --color-brand-green-50: #eff5f2;
+  --color-brand-green-100: #d7e7df;
+  --color-brand-green-200: #aecfbf;
+  --color-brand-green-300: #7baf97;
+  --color-brand-green-400: #4a8c71;
+  --color-brand-green-500: #2c6e55;
+  --color-brand-green-600: #1f5843;
+  --color-brand-green-700: #184636;
+  --color-brand-green-800: #12352a;
+  --color-brand-green-900: #0c2620;
 
-  --color-brand-gold-50: #fefcf0;
-  --color-brand-gold-100: #fdf6d1;
-  --color-brand-gold-200: #faeaa3;
-  --color-brand-gold-300: #f6d96b;
-  --color-brand-gold-400: #f0c435;
-  --color-brand-gold-500: #d4a517;
-  --color-brand-gold-600: #a88012;
-  --color-brand-gold-700: #7d5f0e;
-  --color-brand-gold-800: #54400a;
-  --color-brand-gold-900: #362906;
+  /* --- Caution: muted brass. Warnings and unverified states only. ------- */
+  --color-brand-gold-50: #fbf6ec;
+  --color-brand-gold-100: #f4e9d3;
+  --color-brand-gold-200: #e6d3ab;
+  --color-brand-gold-300: #d3b77e;
+  --color-brand-gold-400: #b8955a;
+  --color-brand-gold-500: #9a7840;
+  --color-brand-gold-600: #7d5f31;
+  --color-brand-gold-700: #614926;
+  --color-brand-gold-800: #45341b;
+  --color-brand-gold-900: #2c2111;
 
-  --color-brand-cream-50: #fefdfb;
-  --color-brand-cream-100: #fdfbf7;
-  --color-brand-cream-200: #fbf7ef;
-  --color-brand-cream-300: #f7f0e3;
-  --color-brand-cream-400: #f0e6d1;
-  --color-brand-cream-500: #e5d5b8;
+  /* --- Paper: warm neutral, very low chroma. Surfaces and hairlines. ---- */
+  --color-brand-cream-50: #fbfbf9;
+  --color-brand-cream-100: #f5f5f2;
+  --color-brand-cream-200: #ececE8;
+  --color-brand-cream-300: #e0e1dc;
+  --color-brand-cream-400: #cdcfc9;
+  --color-brand-cream-500: #b0b3ac;
 
-  --font-sans: 'General Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* --- Ink: text and structure. Slightly green-tinted neutral. ---------- */
+  --color-ink-50: #f6f7f6;
+  --color-ink-100: #e8eae8;
+  --color-ink-200: #d2d6d3;
+  --color-ink-300: #adb3af;
+  --color-ink-400: #7c8480;
+  --color-ink-500: #5a625e;
+  --color-ink-600: #434a47;
+  --color-ink-700: #333937;
+  --color-ink-800: #222725;
+  --color-ink-900: #141817;
+
+  /* --- Grey is remapped onto ink -----------------------------------------
+     The codebase uses text-gray-* in many places. Tailwind's default grey is
+     cool and clashes with the warm paper. Overriding the scale repalettes
+     every existing usage at once instead of touching every file. */
+  --color-gray-50: #f6f7f6;
+  --color-gray-100: #e8eae8;
+  --color-gray-200: #d2d6d3;
+  --color-gray-300: #adb3af;
+  --color-gray-400: #7c8480;
+  --color-gray-500: #5a625e;
+  --color-gray-600: #434a47;
+  --color-gray-700: #333937;
+  --color-gray-800: #222725;
+  --color-gray-900: #141817;
+
+  --color-danger-50: #fcf1f0;
+  --color-danger-600: #a03328;
+  --color-danger-700: #82291f;
+
+  /* --- Type ------------------------------------------------------------- */
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-display), ui-serif, Georgia, serif;
+
+  /* --- Structure. Flatter radii than the stack default. ------------------ */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 7px;
+  --radius-xl: 9px;
+  --radius-2xl: 12px;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   background-color: var(--color-brand-cream-50);
-  color: #1a1a1a;
+  color: var(--color-ink-800);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Nothing on the site should force a horizontal scrollbar at 320px. */
+  overflow-x: hidden;
 }
 
-/* Scrollbar styles */
+h1, h2, h3 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.011em;
+}
+
+/* Prices, areas and counts line up in columns. */
+.tabular,
+[data-price] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* ==========================================================================
+   Accessibility floor
+   ========================================================================== */
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-green-500);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Never remove focus for keyboard users. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Touch targets stay thumb-sized on phones. */
+@media (pointer: coarse) {
+  .btn,
+  button,
+  [role='button'] {
+    min-height: 44px;
+  }
+}
+
+/* ==========================================================================
+   Scrollbar
+   ========================================================================== */
+
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -51,76 +168,158 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-brand-green-300);
-  border-radius: 3px;
+  background: var(--color-brand-cream-400);
+  border: 3px solid var(--color-brand-cream-100);
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-brand-green-400);
+  background: var(--color-ink-300);
 }
 
-/* Form focus styles */
-input:focus,
-select:focus,
-textarea:focus {
-  outline: 2px solid var(--color-brand-green-400);
-  outline-offset: 1px;
-}
+/* ==========================================================================
+   Form controls
+   ========================================================================== */
 
-/* Custom input styles */
 .input-field {
   width: 100%;
-  padding: 0.625rem 0.875rem;
+  padding: 0.625rem 0.75rem;
   border: 1px solid var(--color-brand-cream-400);
-  border-radius: 0.5rem;
-  background-color: white;
-  font-size: 0.875rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  border-radius: var(--radius-md);
+  background-color: #fff;
+  color: var(--color-ink-800);
+  /* 16px prevents iOS Safari zooming the viewport on focus. */
+  font-size: 1rem;
+  line-height: 1.4;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+@media (min-width: 640px) {
+  .input-field {
+    font-size: 0.875rem;
+  }
+}
+
+.input-field::placeholder {
+  color: var(--color-ink-400);
 }
 
 .input-field:focus {
-  border-color: var(--color-brand-green-400);
-  box-shadow: 0 0 0 3px rgba(46, 170, 100, 0.1);
+  border-color: var(--color-brand-green-500);
+  box-shadow: 0 0 0 3px rgba(44, 110, 85, 0.14);
 }
 
-/* Button base styles */
+/* Only drop the outline for pointer focus. A blanket outline:none here beat
+   the global :focus-visible rule on specificity and left keyboard users with
+   nothing but a 14% alpha ring, which is close to invisible. */
+.input-field:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.input-field:disabled {
+  background-color: var(--color-brand-cream-100);
+  color: var(--color-ink-400);
+  cursor: not-allowed;
+}
+
+select.input-field {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%235a625e' stroke-width='1.5'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.625rem center;
+  background-size: 12px;
+  padding-right: 2rem;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  border-radius: 0.5rem;
+  padding: 0.625rem 1.125rem;
+  border-radius: var(--radius-md);
   font-weight: 500;
   font-size: 0.875rem;
-  transition: all 0.2s;
+  line-height: 1.2;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .btn-primary {
   background-color: var(--color-brand-green-600);
-  color: white;
+  color: #fff;
+  border: 1px solid var(--color-brand-green-600);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background-color: var(--color-brand-green-700);
+  border-color: var(--color-brand-green-700);
 }
 
 .btn-secondary {
-  background-color: var(--color-brand-gold-400);
-  color: var(--color-brand-green-900);
+  background-color: var(--color-ink-900);
+  color: #fff;
+  border: 1px solid var(--color-ink-900);
 }
 
-.btn-secondary:hover {
-  background-color: var(--color-brand-gold-500);
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--color-ink-800);
 }
 
 .btn-outline {
-  border: 1px solid var(--color-brand-green-600);
-  color: var(--color-brand-green-600);
-  background: transparent;
+  border: 1px solid var(--color-brand-cream-400);
+  color: var(--color-ink-700);
+  background: #fff;
 }
 
-.btn-outline:hover {
-  background-color: var(--color-brand-green-50);
+.btn-outline:hover:not(:disabled) {
+  border-color: var(--color-ink-300);
+  background-color: var(--color-brand-cream-100);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Signature: the registry stamp
+   A ruled, letter-spaced band used only for the stated title document. It is
+   the one ornamental element in the system, borrowed from the stamp a land
+   registry puts on a deed, and it appears nowhere else.
+   ========================================================================== */
+
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.1875rem 0.5rem;
+  border: 1px solid currentColor;
+  border-radius: 2px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.stamp-stated {
+  color: var(--color-brand-green-600);
+  background-color: rgba(255, 255, 255, 0.94);
+}
+
+.stamp-missing {
+  color: var(--color-brand-gold-600);
+  background-color: var(--color-brand-gold-50);
+}
+
+/* Hairline rule used instead of card shadows. */
+.rule {
+  border-top: 1px solid var(--color-brand-cream-300);
 }

@@ -40,10 +40,15 @@ export default function LoginPage() {
           .eq('id', user.id)
           .single()
 
-        if (profile?.role === 'admin') {
-          router.push('/admin')
+        // Read straight off window rather than useSearchParams, which would
+        // force a Suspense boundary around the whole login form.
+        const redirect = new URLSearchParams(window.location.search).get('redirect')
+        const isAdmin = profile?.role === 'admin'
+
+        if (redirect && redirect.startsWith('/') && (isAdmin || !redirect.startsWith('/admin'))) {
+          router.push(redirect)
         } else {
-          router.push('/dashboard')
+          router.push(isAdmin ? '/admin' : '/dashboard')
         }
         router.refresh()
       }
