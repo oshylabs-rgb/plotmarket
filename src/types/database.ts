@@ -14,6 +14,29 @@ export type SubscriptionStatus = 'active' | 'expired' | 'cancelled'
 
 export type InquiryStatus = 'unread' | 'read' | 'replied'
 
+export type TitleDocumentType =
+  | 'c_of_o'
+  | 'governors_consent'
+  | 'deed_of_assignment'
+  | 'excision'
+  | 'gazette'
+  | 'registered_survey'
+  | 'allocation_letter'
+  | 'family_receipt'
+  | 'unknown'
+
+export const TITLE_DOCUMENT_LABELS: Record<TitleDocumentType, string> = {
+  c_of_o: 'Certificate of Occupancy (C of O)',
+  governors_consent: 'Governor’s Consent',
+  deed_of_assignment: 'Deed of Assignment',
+  excision: 'Excision',
+  gazette: 'Gazette',
+  registered_survey: 'Registered Survey',
+  allocation_letter: 'Allocation Letter',
+  family_receipt: 'Family Receipt',
+  unknown: 'Not stated',
+}
+
 export interface Profile {
   id: string
   email: string
@@ -45,6 +68,9 @@ export interface Property {
   area: number | null
   images: string[]
   videos: string[]
+  images_360: string[]
+  videos_360: string[]
+  title_document: TitleDocumentType
   features: string[]
   status: PropertyStatus
   is_featured: boolean

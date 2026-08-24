@@ -139,7 +139,7 @@ export default function DashboardPage() {
             {properties.length > 0 ? (
               properties.slice(0, 3).map((property) => (
                 <div key={property.id} className="flex items-center gap-3 rounded-lg bg-brand-cream-50 p-3">
-                  <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-brand-green-500 to-brand-green-400 shrink-0" />
+                  <div className="h-10 w-10 shrink-0 rounded-md border border-brand-cream-300 bg-brand-cream-200" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{property.title}</p>
                     <p className="text-xs text-gray-500">{formatNaira(property.price)}</p>

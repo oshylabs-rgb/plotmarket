@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getPlanByPlanId } from '@/constants/pricing'
 import type { AccountType } from '@/types/database'
 
 export async function GET(request: NextRequest) {
@@ -38,39 +39,63 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${dashboardSubscription}?error=invalid_metadata`)
     }
 
-    const supabase = await createClient()
+    // Only plans that can actually be bought online may be granted here.
+    const plan = getPlanByPlanId(planId)
+    if (!plan || planId === 'free' || planId === 'enterprise') {
+      return NextResponse.redirect(`${dashboardSubscription}?error=invalid_metadata`)
+    }
+    const accountType = plan.planId as AccountType
 
-    // Calculate subscription dates (1 month from now)
-    const startDate = new Date().toISOString()
-    const endDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    // The service role client is used deliberately. This route is reached by a
+    // redirect back from Paystack, and if the visitor's session cookie has
+    // expired in the meantime an anon client would be blocked by row level
+    // security and the paid-for plan would never be granted. The payment has
+    // already been verified against Paystack above, so the grant is trusted.
+    const supabase = createAdminClient()
 
-    // Map planId to AccountType
-    const accountType = planId as AccountType
+    // The webhook records the same reference, and a visitor can reload this
+    // URL. Without this check either would create a duplicate subscription.
+    const { data: existing, error: lookupError } = await supabase
+      .from('subscriptions')
+      .select('id')
+      .eq('paystack_reference', reference)
+      .limit(1)
 
-    // Create or update subscription
-    const { error: subError } = await supabase.from('subscriptions').insert({
-      user_id: userId,
-      plan: accountType,
-      amount: verifyData.data.amount / 100, // Convert kobo back to Naira
-      start_date: startDate,
-      end_date: endDate,
-      status: 'active',
-      paystack_reference: reference,
-      paystack_subscription_code: null,
-      paystack_customer_code: customer?.customer_code || null,
-      paystack_plan_code: null,
-    })
-
-    if (subError) {
-      console.error('Error creating subscription:', subError)
+    if (lookupError) {
+      console.error('Error looking up subscription:', lookupError)
       return NextResponse.redirect(`${dashboardSubscription}?error=subscription_creation_failed`)
     }
 
+    if (!existing || existing.length === 0) {
+      const { error: subError } = await supabase.from('subscriptions').insert({
+        user_id: userId,
+        plan: accountType,
+        amount: verifyData.data.amount / 100, // Convert kobo back to Naira
+        start_date: new Date().toISOString(),
+        end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'active',
+        paystack_reference: reference,
+        paystack_subscription_code: null,
+        paystack_customer_code: customer?.customer_code || null,
+        paystack_plan_code: null,
+      })
+
+      if (subError) {
+        console.error('Error creating subscription:', subError)
+        return NextResponse.redirect(`${dashboardSubscription}?error=subscription_creation_failed`)
+      }
+    }
+
     // Update user profile account_type
-    await supabase
+    const { error: profileError } = await supabase
       .from('profiles')
       .update({ account_type: accountType })
       .eq('id', userId)
+
+    if (profileError) {
+      console.error('Error upgrading profile:', profileError)
+      return NextResponse.redirect(`${dashboardSubscription}?error=subscription_creation_failed`)
+    }
 
     return NextResponse.redirect(`${dashboardSubscription}?success=true`)
   } catch (error) {

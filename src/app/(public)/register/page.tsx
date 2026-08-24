@@ -107,7 +107,7 @@ export default function RegisterPage() {
           </p>
           <div className="mt-6 rounded-lg bg-brand-green-50 border border-brand-green-200 px-4 py-4 text-sm text-brand-green-800">
             <p className="font-medium">What happens next:</p>
-            <p className="mt-1">Click the link in the email and you&apos;ll be logged in automatically — straight to your dashboard.</p>
+            <p className="mt-1">Click the link in the email and you&apos;ll be logged in automatically, straight to your dashboard.</p>
           </div>
           <div className="mt-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-4 text-sm text-amber-800">
             <p className="font-medium">Can&apos;t find the email?</p>

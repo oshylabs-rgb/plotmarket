@@ -1,12 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Users, Building2, CreditCard, MessageSquare, TrendingUp, ArrowUpRight, ArrowDownRight, Loader2 } from 'lucide-react'
+import { Users, Building2, CreditCard, MessageSquare, Loader2 } from 'lucide-react'
 import { formatNaira } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import {
-  LineChart,
-  Line,
   BarChart,
   Bar,
   PieChart,

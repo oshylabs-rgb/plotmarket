@@ -1,27 +1,42 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { Cookie, X } from 'lucide-react'
 
 const STORAGE_KEY = 'plotmarket-cookie-consent'
 
-export function CookieConsent() {
-  const [visible, setVisible] = useState(false)
+// localStorage is an external store, so it is read through
+// useSyncExternalStore rather than an effect that calls setState. Reading it in
+// an effect would trigger a cascading render on every mount.
+let listeners: Array<() => void> = []
 
-  useEffect(() => {
-    const consent = localStorage.getItem(STORAGE_KEY)
-    if (!consent) {
-      setVisible(true)
-    }
-  }, [])
+function subscribe(onStoreChange: () => void) {
+  listeners.push(onStoreChange)
+  return () => {
+    listeners = listeners.filter((l) => l !== onStoreChange)
+  }
+}
+
+function getSnapshot() {
+  return localStorage.getItem(STORAGE_KEY)
+}
+
+// Nothing is rendered on the server, the banner appears once the client has
+// read the real value. This keeps the markup stable through hydration.
+function getServerSnapshot(): string | null {
+  return 'accepted'
+}
+
+export function CookieConsent() {
+  const consent = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
 
   const handleAccept = () => {
     localStorage.setItem(STORAGE_KEY, 'accepted')
-    setVisible(false)
+    listeners.forEach((l) => l())
   }
 
-  if (!visible) return null
+  if (consent) return null
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 p-4">
@@ -45,7 +60,7 @@ export function CookieConsent() {
             </button>
             <button
               onClick={handleAccept}
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-brand-cream-100 hover:text-gray-600 transition-colors"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-gray-400 hover:bg-brand-cream-100 hover:text-gray-600 transition-colors"
               aria-label="Dismiss"
             >
               <X className="h-4 w-4" />

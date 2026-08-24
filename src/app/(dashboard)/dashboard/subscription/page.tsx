@@ -55,7 +55,7 @@ function SubscriptionContent() {
 
       if (data.authorization_url) {
         // Redirect to Paystack checkout
-        window.location.href = data.authorization_url
+        window.location.assign(data.authorization_url)
       } else {
         alert(data.error || 'Failed to initialize payment')
         setSubscribingPlan(null)

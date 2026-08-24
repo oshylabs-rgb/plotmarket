@@ -2,11 +2,12 @@
 
 import { use, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, MapPin, Bed, Bath, Maximize, Tag, Shield, Star, User, Phone, Mail, MessageSquare, Loader2, AlertCircle, ChevronLeft, ChevronRight, Film } from 'lucide-react'
+import { ArrowLeft, MapPin, Bed, Bath, Maximize, Shield, Star, User, Phone, Mail, MessageSquare, Loader2, AlertCircle, ChevronLeft, ChevronRight, Film, Rotate3d, ScrollText } from 'lucide-react'
 import { formatNaira, getPropertyGradient } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import type { Property, Profile } from '@/types/database'
+import { Viewer360 } from '@/components/Viewer360'
+import { TITLE_DOCUMENT_LABELS, type Property, type Profile } from '@/types/database'
 
 export default function PropertyDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -130,7 +131,8 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                         prev === 0 ? property.images.length - 1 : prev - 1
                       )
                     }
-                    className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+                    aria-label="Previous photo"
+                    className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
@@ -141,7 +143,8 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                         prev === property.images.length - 1 ? 0 : prev + 1
                       )
                     }
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
+                    aria-label="Next photo"
+                    className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white transition-colors hover:bg-black/70"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
@@ -182,12 +185,12 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               )}
             </div>
           ) : (
-            <div className={`relative h-64 overflow-hidden rounded-2xl bg-gradient-to-br ${gradient} sm:h-80 lg:h-96`}>
+            <div className={`relative h-64 overflow-hidden rounded-2xl ${gradient} sm:h-80 lg:h-96`}>
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center text-white/80">
-                  <Maximize className="mx-auto h-16 w-16 mb-2" />
+                <div className="text-center text-ink-400">
+                  <Maximize className="mx-auto mb-2 h-14 w-14" />
                   <span className="text-lg font-medium">
-                    {property.area ? `${property.area} m²` : 'Property Image'}
+                    {property.area ? `${property.area} m²` : 'No photo provided'}
                   </span>
                 </div>
               </div>
@@ -204,6 +207,27 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
                   Featured
                 </span>
               )}
+            </div>
+          )}
+
+          {/* 360° tours */}
+          {((property.images_360?.length ?? 0) > 0 || (property.videos_360?.length ?? 0) > 0) && (
+            <div className="mt-6">
+              <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                <Rotate3d className="h-5 w-5 text-brand-green-600" />
+                360° tour
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Drag to look around. Inspect the property before you travel to see it.
+              </p>
+              <div className="mt-3 space-y-4">
+                {(property.videos_360 ?? []).map((url) => (
+                  <Viewer360 key={url} src={url} type="video" className="h-72 sm:h-96" />
+                ))}
+                {(property.images_360 ?? []).map((url) => (
+                  <Viewer360 key={url} src={url} type="image" className="h-72 sm:h-96" />
+                ))}
+              </div>
             </div>
           )}
 
@@ -270,6 +294,34 @@ export default function PropertyDetailPage({ params }: { params: Promise<{ id: s
               <div className="flex items-center gap-2 rounded-lg bg-brand-green-50 px-4 py-2.5">
                 <Shield className="h-5 w-5 text-brand-green-600" />
                 <span className="font-medium text-brand-green-700">Verified</span>
+              </div>
+            )}
+          </div>
+
+          {/* Title document */}
+          <div className="mt-8 rounded-xl border border-brand-cream-300 bg-white p-5">
+            <h2 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+              <ScrollText className="h-5 w-5 text-brand-green-600" />
+              Title document
+            </h2>
+            {property.title_document && property.title_document !== 'unknown' ? (
+              <>
+                <p className="mt-2 text-lg font-semibold text-brand-green-700">
+                  {TITLE_DOCUMENT_LABELS[property.title_document]}
+                </p>
+                <p className="mt-1 text-sm text-gray-500">
+                  Stated by the seller. Plotmarket does not verify title documents. Always confirm
+                  at the relevant state land registry, and instruct your own solicitor, before you
+                  pay any money.
+                </p>
+              </>
+            ) : (
+              <div className="mt-2 flex items-start gap-2 rounded-lg bg-brand-gold-50 px-3 py-2.5">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-brand-gold-600" />
+                <p className="text-sm text-brand-gold-800">
+                  The seller has not stated a title document. Ask what title is available and
+                  verify it at the state land registry before paying anything.
+                </p>
               </div>
             )}
           </div>
