@@ -4,10 +4,21 @@
 --
 -- RUN THIS IN THE SUPABASE SQL EDITOR ONLY.
 --
--- Before running, replace __SET_BEFORE_RUNNING__ below with the real password
--- in the editor buffer only. Do not save that value back into this file and do
--- not commit it, this repository is public. Rotate the password from the app
--- after the first login.
+-- This file NEVER contains the password. Supply it at run time, one of:
+--
+--   a) Supabase Vault (preferred). Create a secret named
+--      'plotmarket_superadmin_password' in Dashboard > Project Settings >
+--      Vault, or in the SQL editor:
+--        select vault.create_secret('<password>', 'plotmarket_superadmin_password');
+--      Delete the secret again after this migration has run.
+--
+--   b) Session setting. In the SAME SQL editor session, run first:
+--        select set_config('app.superadmin_password', '<password>', false);
+--      then run this file. The setting dies with the session.
+--
+-- Either way, never save or commit a real password anywhere in this
+-- repository: it is public. Rotate the password from the app after the
+-- first login.
 --
 -- Safe to re-run: the account insert is a no-op if the email already exists.
 
@@ -21,13 +32,32 @@ declare
   v_user_id uuid;
   v_col text;
   v_email text := 'superadmin@plotmarket.ng';
-  -- Set this to the real password immediately before running, then clear it
-  -- again. Never commit a real value here, this file is in a public repo.
-  v_password text := '__SET_BEFORE_RUNNING__';
+  -- Never a literal here: this file is in a public repo. The password is
+  -- read from Supabase Vault or a session setting, see the header comment.
+  v_password text;
 begin
-  if v_password = '__SET_BEFORE_RUNNING__' then
-    raise exception
-      'Set v_password to a real password before running migration 0003.';
+  -- 1st choice: Supabase Vault secret 'plotmarket_superadmin_password'.
+  begin
+    select decrypted_secret into v_password
+    from vault.decrypted_secrets
+    where name = 'plotmarket_superadmin_password'
+    order by created_at desc
+    limit 1;
+  exception when others then
+    v_password := null;  -- vault not enabled or not readable, fall through
+  end;
+
+  -- 2nd choice: session setting set via set_config() in this session.
+  if v_password is null or v_password = '' then
+    v_password := nullif(current_setting('app.superadmin_password', true), '');
+  end if;
+
+  if v_password is null then
+    raise exception using message =
+      'No password supplied. Create Vault secret '
+      || '''plotmarket_superadmin_password'' or run '
+      || 'select set_config(''app.superadmin_password'', ''<password>'', false); '
+      || 'in this session before running migration 0003.';
   end if;
 
   select id into v_user_id from auth.users where email = v_email;

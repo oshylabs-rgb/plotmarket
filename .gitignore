@@ -47,3 +47,5 @@ supabase/.env*
 
 # local handoff notes, may contain credentials
 HANDOFF.md
+
+.vercel

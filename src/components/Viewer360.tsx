@@ -90,6 +90,10 @@ export function Viewer360({ src, type, className = '' }: Viewer360Props) {
   const dragging = useRef(false)
   const last = useRef({ x: 0, y: 0 })
   const pinchDist = useRef<number | null>(null)
+  const drawRef = useRef<(() => void) | null>(null)
+
+  /** Ask the renderer for a repaint after the camera has moved. */
+  const requestDraw = () => drawRef.current?.()
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -193,6 +197,7 @@ export function Viewer360({ src, type, className = '' }: Viewer360Props) {
         source = img
         uploadTexture()
         setReady(true)
+        drawRef.current?.() // paint the panorama now it has decoded
       }
       img.onerror = () => !disposed && setFailed(true)
       img.src = src
@@ -207,10 +212,19 @@ export function Viewer360({ src, type, className = '' }: Viewer360Props) {
           // flat placeholder colour until the visitor presses play.
           uploadTexture()
           setReady(true)
+          drawRef.current?.()
         }
         // A seek lands a new frame while paused, so it needs an upload too.
-        video.onseeked = () => !disposed && uploadTexture()
-        video.onplay = () => !disposed && setPlaying(true)
+        video.onseeked = () => {
+          if (disposed) return
+          uploadTexture()
+          drawRef.current?.()
+        }
+        video.onplay = () => {
+          if (disposed) return
+          setPlaying(true)
+          drawRef.current?.() // kicks the continuous loop back on
+        }
         video.onpause = () => !disposed && setPlaying(false)
         video.onerror = () => !disposed && setFailed(true)
       }
@@ -227,25 +241,79 @@ export function Viewer360({ src, type, className = '' }: Viewer360Props) {
       gl.viewport(0, 0, canvas.width, canvas.height)
     }
 
-    const render = () => {
-      if (disposed) return
+    const drawFrame = () => {
       resize()
-      // Video needs a fresh upload every frame while it is playing.
-      if (type === 'video' && source && !(source as HTMLVideoElement).paused) {
-        uploadTexture()
-      }
       gl.uniform2f(uRes, canvas.width, canvas.height)
       gl.uniform1f(uYaw, yaw.current)
       gl.uniform1f(uPitch, pitch.current)
       gl.uniform1f(uFov, fov.current)
       gl.drawArrays(gl.TRIANGLES, 0, 6)
-      raf = requestAnimationFrame(render)
     }
-    raf = requestAnimationFrame(render)
+
+    /**
+     * Render on demand rather than on a permanent rAF loop.
+     *
+     * A still panorama only changes when the visitor drags, zooms or the
+     * element resizes, so redrawing it 60 times a second forever burns phone
+     * battery for nothing. A continuous loop runs only while a 360 video is
+     * actually playing, and even then only while the viewer is on screen and
+     * the tab is visible. This matters more here than usual: the audience is
+     * overwhelmingly on mobile.
+     */
+    let onScreen = true
+    let looping = false
+
+    const isPlayingVideo = () =>
+      type === 'video' && !!source && !(source as HTMLVideoElement).paused
+
+    const loop = () => {
+      if (disposed) return
+      if (!onScreen || document.hidden || !isPlayingVideo()) {
+        looping = false
+        return
+      }
+      uploadTexture() // video needs a fresh frame every draw
+      drawFrame()
+      raf = requestAnimationFrame(loop)
+    }
+
+    const startLoop = () => {
+      if (looping || disposed) return
+      looping = true
+      raf = requestAnimationFrame(loop)
+    }
+
+    // Published on a ref so the pointer handlers and the play button can ask
+    // for a repaint without reaching into this closure.
+    const requestDraw = () => {
+      if (disposed || !onScreen || document.hidden) return
+      if (isPlayingVideo()) startLoop()
+      else drawFrame()
+    }
+    drawRef.current = requestDraw
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        onScreen = entry.isIntersecting
+        if (onScreen) requestDraw()
+      },
+      { threshold: 0.01 }
+    )
+    observer.observe(canvas)
+
+    const onVisibility = () => requestDraw()
+    document.addEventListener('visibilitychange', onVisibility)
+    window.addEventListener('resize', requestDraw)
+
+    drawFrame()
 
     return () => {
       disposed = true
       cancelAnimationFrame(raf)
+      observer.disconnect()
+      document.removeEventListener('visibilitychange', onVisibility)
+      window.removeEventListener('resize', requestDraw)
+      drawRef.current = null
       gl.deleteTexture(texture)
       gl.deleteBuffer(buffer)
       gl.deleteProgram(program)
@@ -263,6 +331,7 @@ export function Viewer360({ src, type, className = '' }: Viewer360Props) {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       fov.current = Math.max(0.5, Math.min(2.2, fov.current + e.deltaY * 0.001))
+      drawRef.current?.()
     }
     canvas.addEventListener('wheel', onWheel, { passive: false })
     return () => canvas.removeEventListener('wheel', onWheel)
@@ -286,6 +355,7 @@ export function Viewer360({ src, type, className = '' }: Viewer360Props) {
     // Drag moves the scene with the finger on both axes, as Street View does.
     yaw.current += dx * speed
     pitch.current = clampPitch(pitch.current + dy * speed)
+    requestDraw()
   }
 
   const endDrag = (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -301,6 +371,7 @@ export function Viewer360({ src, type, className = '' }: Viewer360Props) {
     const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
     if (pinchDist.current !== null) {
       fov.current = Math.max(0.5, Math.min(2.2, fov.current - (dist - pinchDist.current) * 0.004))
+      requestDraw()
     }
     pinchDist.current = dist
   }

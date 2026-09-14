@@ -72,13 +72,20 @@ If it does not read all five metadata keys, apply the
    statement is guarded and it is safe to re-run.
 
 2. **`0003_super_admin.sql`** — this creates the super admin account.
-   In the SQL editor, replace `__SET_BEFORE_RUNNING__` with the real password
-   **in the editor buffer only**. Do not save it back into the file and do not
-   commit it, this repository is public. The migration raises an exception
-   rather than running if you forget, so it cannot create an account with a
-   placeholder password.
+   The file never contains the password. Supply it at run time, either as a
+   Supabase Vault secret named `plotmarket_superadmin_password` (delete it
+   after the run), or by running
+   `select set_config('app.superadmin_password', '<password>', false);`
+   in the same SQL editor session first. The migration raises an exception
+   rather than running if neither is present, so it cannot create an account
+   with a missing password. Never commit a real password anywhere in this
+   repository, it is public.
 
    Rotate the password from the app after the first login.
+
+   Rotation 2026-08-31: the super admin password was rotated. The current
+   credential and the ready-to-run rotation SQL live outside this repo in
+   `C:\Users\aoshe\Cowork\_secure\plotmarket-admin-credential.txt`.
 
 ## After running
 
