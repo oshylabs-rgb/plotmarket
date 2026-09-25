@@ -42,13 +42,15 @@ Run after every production deploy. All must pass.
 - `https://plotmarket.ng/robots.txt` returns 200 and contains `Sitemap: https://plotmarket.ng/sitemap.xml`
 - `https://plotmarket.ng/sitemap.xml` returns 200 with at least 30 URLs including `/guides/` and `/land-for-sale/` pages
 - `https://plotmarket.ng/pricing` shows exactly Free, Professional ₦35,000, Enterprise
-- `curl https://plotmarket.ng/` HTML contains at least one real listing title and not "No properties yet" (needs the server render fix, see open items)
-- `curl https://plotmarket.ng/properties` HTML contains listing cards and no spinner (same dependency)
+- `curl https://plotmarket.ng/` HTML contains at least one real listing title and not "No properties yet" 
+- `curl https://plotmarket.ng/properties` HTML contains listing cards and no spinner
 - `curl https://plotmarket.ng/properties/<any approved listing id>` contains a `RealEstateListing` JSON-LD block and the seller name (get an id with `select id from public.properties where status='approved' limit 1`)
 - `https://plotmarket.ng/land-for-sale/lagos/lekki` and `https://plotmarket.ng/guides/how-to-verify-land-title-in-nigeria` return 200
 - A fresh registration on `/register` receives its confirmation email and the link lands on plotmarket.ng
 
 ## What changed on 25 Sep 2026
+
+- Public listing pages server rendered (PR #4): `/`, `/properties` static with 5 minute revalidate, `/properties/[id]` on demand; UI in `src/components/home` and `src/components/properties`.
 
 - Overlay recovered from deployment `dpl_HZ8dAz8zaKJDGPNh1pwhrhEQqiTd` and merged to master (PR #3): robots, sitemap, OG image, 3 guides, 12 area pages, three tier pricing, per-route metadata, JSON-LD, public anon Supabase client.
 - First git triggered production deploy since 13 Sep; robots, sitemap (38 URLs), pricing, guides and area pages verified live.
@@ -58,7 +60,7 @@ Run after every production deploy. All must pass.
 
 ## Open items and risks
 
-1. **Public listing pages are still client rendered.** `/`, `/properties` and `/properties/[id]` serve "No properties yet" or a spinner to crawlers. The prepared patch `0001-Server-render-the-public-listing-pages.patch` was not in the working directory; apply it on a branch from master, resolve the three page files by keeping the patch's Server Component structure and the overlay's metadata, and open a PR.
+1. Listing pages are server rendered since PR #4 (25 Sep). If a listing ever shows "No properties yet" to curl, check `src/lib/listings.ts` and the anon key first.
 2. Super admin: `superadmin@plotmarket.ng` must exist in the new project (Authentication → Users → Add user) and be promoted with `update public.profiles set role='admin', account_type='enterprise', is_verified=true where email='superadmin@plotmarket.ng'`.
 3. Security advisors: re-run `supabase db advisors --linked --project-ref qjlwmpbmrdercymcnroz --type security` after the first real users arrive; enable leaked password protection.
 6. Legacy `starter` and `business` plan ids are still honoured for existing subscribers via `LEGACY_PLAN_LIMITS` in `src/constants/pricing.ts`.
