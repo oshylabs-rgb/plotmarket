@@ -1,12 +1,58 @@
 import { createPublicClient } from '@/lib/supabase/public'
 import type { LaunchArea } from '@/constants/areas'
-import type { Property } from '@/types/database'
+import type { Profile, Property } from '@/types/database'
 
 /**
- * Public, approved only listing reads for server rendered landing pages.
- * Returns an empty array when the anon client is unavailable so pages still
- * render their editorial content.
+ * Public, approved only listing reads for server rendered pages.
+ * Every function returns an empty result when the anon client is unavailable
+ * so pages still render their editorial content.
  */
+
+const FEED_ORDER = [
+  { column: 'is_featured', ascending: false },
+  { column: 'created_at', ascending: false },
+] as const
+
+/** Approved listings, featured first, newest first. Used by /properties. */
+export async function getApprovedListings(limit = 500): Promise<Property[]> {
+  const supabase = createPublicClient()
+  if (!supabase) return []
+  let query = supabase.from('properties').select('*').eq('status', 'approved')
+  for (const o of FEED_ORDER) query = query.order(o.column, { ascending: o.ascending })
+  const { data } = await query.limit(limit)
+  return (data as Property[] | null) ?? []
+}
+
+/** The home page strip: the first N approved listings, featured first. */
+export async function getFeaturedListings(limit = 8): Promise<Property[]> {
+  return getApprovedListings(limit)
+}
+
+/**
+ * One approved listing plus the profile of the person who listed it.
+ * Returns null when the listing does not exist or is not approved, which the
+ * page turns into a 404. Owners see their pending listings in the dashboard.
+ */
+export async function getApprovedPropertyWithSeller(
+  id: string
+): Promise<{ property: Property; seller: Profile | null } | null> {
+  const supabase = createPublicClient()
+  if (!supabase) return null
+  const { data: property } = await supabase
+    .from('properties')
+    .select('*')
+    .eq('id', id)
+    .eq('status', 'approved')
+    .maybeSingle()
+  if (!property) return null
+  const { data: seller } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', (property as Property).user_id)
+    .maybeSingle()
+  return { property: property as Property, seller: (seller as Profile | null) ?? null }
+}
+
 export async function getApprovedListingsForState(state: string, limit = 200): Promise<Property[]> {
   const supabase = createPublicClient()
   if (!supabase) return []
