@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.4.0'
+export const APP_VERSION = '0.5.0'
 
 export interface Release {
   version: string
@@ -8,6 +8,16 @@ export interface Release {
 
 /** Newest first. Keep entries factual and user facing. */
 export const CHANGELOG: Release[] = [
+  {
+    version: '0.5.0',
+    date: '2026-09-13',
+    changes: [
+      'Land for sale pages for 12 launch areas across Lagos, Abuja, Ogun, Oyo and Rivers, each with the title documents to expect and the registry to confirm them at.',
+      'Three buyer guides: Nigerian land title documents explained, how to verify a title step by step, and buying land in Nigeria from abroad.',
+      'Pricing simplified to three plans: Free, Professional and Enterprise. Existing Starter and Business subscriptions keep their limits until they end.',
+      'Search engines can now find the site: robots.txt, sitemap and structured data added, with a unique title and description on every page.',
+    ],
+  },
   {
     version: '0.4.0',
     date: '2026-08-23',

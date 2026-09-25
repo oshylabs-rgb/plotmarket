@@ -11,7 +11,7 @@ export function Footer() {
           <div className="md:col-span-2">
             <Logo light />
             <p className="mt-3 text-sm text-brand-green-200">
-              Nigeria&apos;s premier property listing platform. Find your dream property across all 36 states.
+              Land and property across all 36 states and the FCT. Every listing states its title document and names the seller.
             </p>
             <p className="mt-2 text-xs text-brand-green-300">
               Plotmarket is a product of Oshylabs Ltd
@@ -22,6 +22,8 @@ export function Footer() {
             <ul className="mt-3 space-y-2">
               <li><Link href="/properties" className="text-sm text-brand-green-200 hover:text-brand-gold-400 transition-colors">Browse Properties</Link></li>
               <li><Link href="/pricing" className="text-sm text-brand-green-200 hover:text-brand-gold-400 transition-colors">Pricing Plans</Link></li>
+              <li><Link href="/land-for-sale" className="text-sm text-brand-green-200 hover:text-brand-gold-400 transition-colors">Land for Sale by Area</Link></li>
+              <li><Link href="/guides" className="text-sm text-brand-green-200 hover:text-brand-gold-400 transition-colors">Buyer Guides</Link></li>
               <li><Link href="/register" className="text-sm text-brand-green-200 hover:text-brand-gold-400 transition-colors">List Your Property</Link></li>
               <li><Link href="/changelog" className="text-sm text-brand-green-200 hover:text-brand-gold-400 transition-colors">Changelog</Link></li>
             </ul>

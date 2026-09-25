@@ -12,6 +12,8 @@ import type { User as SupabaseUser } from '@supabase/supabase-js'
 const NAV_LINKS = [
   { href: '/', label: 'Home' },
   { href: '/properties', label: 'Properties' },
+  { href: '/land-for-sale', label: 'By Area' },
+  { href: '/guides', label: 'Guides' },
   { href: '/pricing', label: 'Pricing' },
 ]
 

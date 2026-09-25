@@ -19,29 +19,13 @@ export const PRICING_PLANS: PricingPlan[] = [
     listings: 3,
     featuredListings: 0,
     features: [
-      '3 property listings',
-      'Basic property details',
+      '3 live listings',
+      'Title document stated on every listing',
+      'Your name and phone shown to buyers',
+      'Photos and a video walkthrough',
       'Email support',
-      'Standard visibility',
     ],
-    cta: 'Get Started',
-    highlighted: false,
-  },
-  {
-    name: 'Starter',
-    planId: 'starter',
-    price: 12000,
-    period: '/month',
-    listings: 20,
-    featuredListings: 3,
-    features: [
-      '20 property listings',
-      '3 featured listings',
-      'Featured badge',
-      'Analytics dashboard',
-      'Priority support',
-    ],
-    cta: 'Subscribe',
+    cta: 'List free',
     highlighted: false,
   },
   {
@@ -52,33 +36,16 @@ export const PRICING_PLANS: PricingPlan[] = [
     listings: 100,
     featuredListings: 20,
     features: [
-      '100 property listings',
+      '100 live listings',
       '20 featured listings',
-      'Verified badge',
-      'Virtual tour support',
-      'Lead generation tools',
-      'Advanced analytics',
+      '360 degree photos and video tours',
+      'Verified lister badge',
+      'Enquiry analytics',
+      'Priority support',
+      'No push ups, no slot fees',
     ],
     cta: 'Subscribe',
     highlighted: true,
-  },
-  {
-    name: 'Business',
-    planId: 'business',
-    price: 80000,
-    period: '/month',
-    listings: 500,
-    featuredListings: 100,
-    features: [
-      '500 property listings',
-      '100 featured listings',
-      'Bulk upload tools',
-      'Team collaboration (5 users)',
-      'API access',
-      'All Professional features',
-    ],
-    cta: 'Subscribe',
-    highlighted: false,
   },
   {
     name: 'Enterprise',
@@ -88,18 +55,27 @@ export const PRICING_PLANS: PricingPlan[] = [
     listings: -1,
     featuredListings: -1,
     features: [
-      'Unlimited listings',
-      'Unlimited featured listings',
-      'White-label solution',
-      'Custom integrations',
-      'SLA guarantee',
-      'Unlimited team members',
-      'On-premise deployment option',
+      'Unlimited listings and featured slots',
+      'Developer page with estate 360 tour',
+      'Bulk upload and team seats',
+      'API access',
+      'Monthly enquiry report by plot and buyer country',
+      'Dedicated support',
     ],
-    cta: 'Contact Sales',
+    cta: 'Talk to us',
     highlighted: false,
   },
 ]
+
+/**
+ * Plans that were sold before the move to three tiers. They are no longer
+ * offered, but an account that still carries one keeps its listing limit until
+ * the subscription ends. Paystack references to these ids resolve here.
+ */
+export const LEGACY_PLAN_LIMITS: Record<string, { listings: number; featuredListings: number }> = {
+  starter: { listings: 20, featuredListings: 3 },
+  business: { listings: 500, featuredListings: 100 },
+}
 
 /**
  * Get the plan config by planId
@@ -113,5 +89,7 @@ export function getPlanByPlanId(planId: string): PricingPlan | undefined {
  */
 export function getListingLimit(planId: string): number {
   const plan = getPlanByPlanId(planId)
-  return plan?.listings ?? 3 // default to free plan limit
+  if (plan) return plan.listings
+  const legacy = LEGACY_PLAN_LIMITS[planId]
+  return legacy?.listings ?? 3 // default to free plan limit
 }
