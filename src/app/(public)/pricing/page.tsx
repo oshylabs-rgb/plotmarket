@@ -1,21 +1,34 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Check, Star } from 'lucide-react'
 import { PRICING_PLANS } from '@/constants/pricing'
 import { formatNaira } from '@/lib/utils'
+
+export const metadata: Metadata = {
+  title: 'Pricing for listers',
+  description:
+    'List three properties free. Professional is ₦35,000 a month for 100 listings with 360 tours and no push up fees. Enterprise for developers and agencies.',
+  alternates: { canonical: 'https://plotmarket.ng/pricing' },
+  openGraph: {
+    title: 'Plotmarket pricing for listers',
+    description: 'Free for 3 listings. Professional ₦35,000 a month for 100. Enterprise for developers.',
+    url: 'https://plotmarket.ng/pricing',
+  },
+}
 
 export default function PricingPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-          Choose Your Plan
+          Pricing for listers
         </h1>
         <p className="mt-3 text-lg text-gray-500">
-          Start listing for free. Upgrade as your business grows.
+          List three properties free. Upgrade when you have more to sell. No push ups, no slot fees.
         </p>
       </div>
 
-      <div className="mt-12 grid gap-6 lg:grid-cols-5">
+      <div className="mx-auto mt-12 grid max-w-5xl gap-6 md:grid-cols-3">
         {PRICING_PLANS.map((plan) => {
           const isFree = plan.planId === 'free'
           const isEnterprise = plan.planId === 'enterprise'
@@ -71,17 +84,17 @@ export default function PricingPage() {
 
               {isEnterprise ? (
                 <a
-                  href="mailto:sales@plotmarket.ng"
+                  href="mailto:arnold.oshenye@oshylabs.eu?subject=Plotmarket%20Enterprise"
                   className="btn btn-outline mt-6 w-full text-center"
                 >
-                  Contact Sales
+                  Talk to us
                 </a>
               ) : isFree ? (
                 <Link
                   href="/register"
                   className={`btn mt-6 w-full btn-outline`}
                 >
-                  Get Started
+                  List free
                 </Link>
               ) : (
                 <Link
@@ -99,12 +112,12 @@ export default function PricingPage() {
       </div>
 
       <div className="mt-16 text-center">
-        <h2 className="text-xl font-semibold text-gray-900">Need a custom solution?</h2>
+        <h2 className="text-xl font-semibold text-gray-900">Developer or agency with an estate to list?</h2>
         <p className="mt-2 text-gray-500">
-          Contact us for custom pricing, API access, and white-label solutions.
+          Enterprise covers unlimited listings, a developer page with a 360 estate tour, bulk upload, team seats and API access.
         </p>
-        <a href="mailto:sales@plotmarket.ng" className="btn btn-primary mt-4 inline-block">
-          Contact Sales
+        <a href="mailto:arnold.oshenye@oshylabs.eu?subject=Plotmarket%20Enterprise" className="btn btn-primary mt-4 inline-block">
+          Talk to us
         </a>
       </div>
     </div>

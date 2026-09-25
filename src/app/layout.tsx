@@ -39,6 +39,39 @@ export const metadata: Metadata = {
     locale: 'en_NG',
     type: 'website',
   },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Plotmarket, Nigerian property and land listings',
+    description:
+      'Every listing states its title document and the person selling it. Inspect in 360 degrees before you travel.',
+  },
+  alternates: { canonical: 'https://plotmarket.ng' },
+  robots: { index: true, follow: true },
+}
+
+const ORGANIZATION_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Plotmarket',
+  legalName: 'Oshylabs Ltd',
+  url: 'https://plotmarket.ng',
+  logo: 'https://plotmarket.ng/opengraph-image',
+  email: 'arnold.oshenye@oshylabs.eu',
+  areaServed: 'NG',
+  description:
+    'Nigerian land and property marketplace where every listing states its title document and names the seller.',
+}
+
+const WEBSITE_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Plotmarket',
+  url: 'https://plotmarket.ng',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://plotmarket.ng/properties?q={search_term_string}',
+    'query-input': 'required name=search_term_string',
+  },
 }
 
 export const viewport: Viewport = {
@@ -55,6 +88,10 @@ export default function RootLayout({
   return (
     <html lang="en-NG" className={`${display.variable} ${body.variable}`}>
       <body className="min-h-screen antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify([ORGANIZATION_JSON_LD, WEBSITE_JSON_LD]) }}
+        />
         {children}
         <CookieConsent />
       </body>
