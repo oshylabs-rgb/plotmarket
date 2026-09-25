@@ -1,0 +1,32 @@
+project_id = "qjlwmpbmrdercymcnroz"
+
+# Plotmarket's own Supabase project. Only declared properties are pushed.
+[auth]
+site_url = "https://plotmarket.ng"
+additional_redirect_urls = [
+  "https://plotmarket.ng/auth/callback",
+  "https://plotmarket.ng/**",
+  "https://www.plotmarket.ng/auth/callback",
+  "https://www.plotmarket.ng/**",
+  "http://localhost:3000/auth/callback",
+  "http://localhost:3000/**",
+]
+enable_signup = true
+
+[auth.rate_limit]
+email_sent = 100
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+double_confirm_changes = true
+max_frequency = "1m0s"
+
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(PLOTMARKET_SMTP_PASS)"
+admin_email = "arnold.oshenye@oshylabs.eu"
+sender_name = "Plotmarket"

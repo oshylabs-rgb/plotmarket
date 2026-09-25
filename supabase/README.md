@@ -132,3 +132,19 @@ If sign-in still fails, the quickest clean alternative is to create the account
 through the Supabase dashboard (Authentication, Add user, with "auto confirm"),
 then run only sections 2 and 3 of `0003` to attach the admin role and the
 policies.
+
+## 25 Sep 2026: dedicated project
+
+Plotmarket now runs on its own Supabase project `qjlwmpbmrdercymcnroz` (org
+`Oshylabs`). Migrations 0001, 0002 and 0004 plus the policy half of 0003 were
+applied there on 25 Sep 2026, followed by `seed_demo.sql` with the image URLs
+rewritten to the new project. `config.toml` in this folder declares the auth
+settings (site URL, redirect allow list, Resend SMTP) and is pushed with:
+
+```bash
+PLOTMARKET_SMTP_PASS=<Resend key "Plotmarket - Supabase Auth SMTP"> \
+  npx supabase config push --project-ref qjlwmpbmrdercymcnroz
+```
+
+Only declared properties are pushed. The old shared project
+`lmfsqfwdgxlsuozxyauy` belongs to ProfileProof and must not be used.
