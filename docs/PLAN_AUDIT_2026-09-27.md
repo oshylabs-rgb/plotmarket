@@ -74,9 +74,19 @@ Whether any company **accepted** the 90-day offer is unverified. No match in the
 5. 360 media and video: available to all tiers (by design today, but listed as a Professional feature).
 6. After one payment, keep Professional indefinitely (B6).
 
-## F. Decisions that need owner sign-off
+## F. Owner decisions (all approved 27 Sep 2026)
 
-See the chat summary, mirrored here once answered.
+1. Security holes B1 to B3 fixed first, in their own PR (migration 0005), ahead of plan work. B12 (inquiries) and an unreported one found while fixing, Paystack charges granting a plan without checking the amount paid, ride in the same PR.
+2. Business allowance = **100 active listings**, active meaning `pending` or `approved`. Rejected, sold and paused do not count.
+3. Business billing stays a one-off ₦35,000 charge for **30 days, renewed by hand**. No automatic charge, no billing change. Copy says "per 30 days"; access is enforced to end at `end_date`.
+4. Business shows only working features: 100 active listings, photos, video and 360 media, title document and seller shown, email support. Verified badge, analytics, priority support and "20 featured" come off.
+5. Enterprise card is replaced by the Founding Developer Pilot card plus a "Larger volumes? Talk to us" line with no feature list.
+6. Pilot expiry: nothing deleted. The 3 **earliest published** listings stay live under Free Starter, the rest become **Paused** (hidden from search, detail page says no longer listed, enquiries blocked). Seller can swap which 3 are live or upgrade to restore all. Warning email 7 days before.
+7. One estate = a project record the admin names on approval (estate name, state, area). Every pilot listing must reference it, enforced server side.
+8. Existing `business` and `starter` accounts keep their limits to their current `end_date`, then fall to Free under rule 6. No price changes.
+9. Anyone who accepted the 90-day outreach offer is honoured as an admin-granted pilot matching the promised end date. The outreach pack is retired and redrafted.
+10. Verified badges come off public pages until a documented verification process exists. Admins keep the flag internally.
+11. Demo listings get an `is_demo` flag and a "Demo listing, not for sale" label, are excluded from the home strip, sitemap and area pages, and cannot receive enquiries.
 
 ## G. Live checks to run before Phase 2 (read only)
 

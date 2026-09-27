@@ -66,26 +66,6 @@ function SubscriptionContent() {
     }
   }
 
-  const handleCancelSubscription = async () => {
-    if (!subscription) return
-    if (!confirm('Are you sure you want to cancel your subscription?')) return
-
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({ status: 'cancelled' })
-      .eq('id', subscription.id)
-
-    if (!error) {
-      await supabase
-        .from('profiles')
-        .update({ account_type: 'basic' })
-        .eq('id', user!.id)
-
-      setSubscription(null)
-    }
-  }
-
   if (authLoading || loading) {
     return (
       <div className="flex h-64 items-center justify-center">
@@ -123,6 +103,8 @@ function SubscriptionContent() {
               ? 'Payment reference missing. Please contact support.'
               : errorParam === 'invalid_metadata'
               ? 'Invalid payment data. Please contact support.'
+              : errorParam === 'amount_mismatch'
+              ? 'The amount paid does not match the plan price, so the plan was not activated. Please contact support.'
               : errorParam === 'subscription_creation_failed'
               ? 'Payment was received but subscription setup failed. Please contact support.'
               : `An error occurred: ${errorParam}`}
@@ -143,7 +125,7 @@ function SubscriptionContent() {
                 {subscription.plan}
               </p>
               <p className="mt-1 text-sm text-brand-green-600">
-                {formatNaira(subscription.amount)}/month
+                {formatNaira(subscription.amount)} for 30 days
               </p>
             </div>
             <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium capitalize text-green-700">
@@ -157,15 +139,12 @@ function SubscriptionContent() {
             </span>
             <span className="flex items-center gap-1">
               <AlertCircle className="h-4 w-4" />
-              Renews: {format(new Date(subscription.end_date), 'MMM d, yyyy')}
+              Ends: {format(new Date(subscription.end_date), 'MMM d, yyyy')}
             </span>
           </div>
-          <button
-            onClick={handleCancelSubscription}
-            className="mt-4 text-sm text-red-600 hover:text-red-700 underline"
-          >
-            Cancel Subscription
-          </button>
+          <p className="mt-4 text-sm text-brand-green-700">
+            This plan does not renew or charge you automatically. Nothing needs cancelling.
+          </p>
         </div>
       ) : (
         <div className="mt-6 rounded-xl border-2 border-brand-cream-300 bg-brand-cream-50 p-6">

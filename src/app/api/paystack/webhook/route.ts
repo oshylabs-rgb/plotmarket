@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getPlanByPlanId } from '@/constants/pricing'
+import { getPlanByPlanId, type PricingPlan } from '@/constants/pricing'
+import { chargeCoversPlan } from '@/lib/paystack'
 import type { AccountType } from '@/types/database'
 
 /**
@@ -25,11 +26,9 @@ function verifyWebhookSignature(body: string, signature: string): boolean {
  * Only plans that can actually be bought online may be granted by a webhook.
  * 'free' is not an account type and 'enterprise' is sold by hand.
  */
-function resolvePurchasablePlan(planId: string): AccountType | null {
+function resolvePurchasablePlan(planId: string): PricingPlan | null {
   if (planId === 'free' || planId === 'enterprise') return null
-  const plan = getPlanByPlanId(planId)
-  if (!plan) return null
-  return plan.planId as AccountType
+  return getPlanByPlanId(planId) ?? null
 }
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
@@ -52,18 +51,24 @@ export async function POST(request: NextRequest) {
 
     switch (event.event) {
       case 'charge.success': {
-        const { reference, metadata, customer, amount } = event.data
+        const { reference, metadata, customer, amount, currency } = event.data
         const userId = metadata?.user_id as string | undefined
         const planId = metadata?.plan_id as string | undefined
 
         // Not one of our subscription charges.
         if (!userId || !planId) break
 
-        const accountType = resolvePurchasablePlan(planId)
-        if (!accountType) {
+        const plan = resolvePurchasablePlan(planId)
+        if (!plan) {
           console.error('Paystack webhook: unknown plan_id', planId, 'ref', reference)
           break
         }
+        // Acknowledged with 200 so Paystack stops retrying; retrying cannot fix it.
+        if (!chargeCoversPlan(plan, amount, currency)) {
+          console.error('Paystack webhook: amount does not cover plan', planId, 'ref', reference)
+          break
+        }
+        const accountType = plan.planId as AccountType
 
         // Idempotency. Paystack retries, and the callback route records the
         // same reference, so this can legitimately run more than once.
