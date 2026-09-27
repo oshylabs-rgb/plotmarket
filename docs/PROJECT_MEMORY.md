@@ -1,6 +1,6 @@
 # PlotMarket project memory
 
-Living notes for whoever works on plotmarket.ng next, human or agent. Keep it short and current. Last updated 25 Sep 2026.
+Living notes for whoever works on plotmarket.ng next, human or agent. Keep it short and current. Last updated 27 Sep 2026.
 
 ## The one rule
 
@@ -18,8 +18,9 @@ vercel ls plotmarket --scope team_Ha87dazpFrZWxGtyiEA0x0zD
 |---|---|---|
 | Repo | github.com/oshylabs-rgb/plotmarket | default branch `master` |
 | Hosting | Vercel project `prj_Et3GQvplmJUrFDzg0Jl39AWmGFSc`, team `team_Ha87dazpFrZWxGtyiEA0x0zD` | git connected |
-| Database and auth | Supabase project `qjlwmpbmrdercymcnroz` ("Plotmarket", org `Oshylabs`, eu-west-2 London), owner cadenceoshylabs@gmail.com | Dedicated to PlotMarket since 25 Sep 2026. Before that PlotMarket lived inside the ProfileProof project `lmfsqfwdgxlsuozxyauy`; its tables, enums, functions, trigger, bucket and PlotMarket-only accounts were removed from there the same day (verified, all counts zero). Never use that project for PlotMarket again. |
-| Supabase org | `Oshylabs` (slug `crkmwalwmkotzpnahsmi`) under cadenceoshylabs@gmail.com | Free plan. The CLI on this machine is logged in as this account. |
+| Database and auth | Supabase project `qjlwmpbmrdercymcnroz` ("Plotmarket", org `Oshylabs`, eu-west-2 London), owner plotmarketng@gmail.com | Dedicated to PlotMarket since 25 Sep 2026. Before that PlotMarket lived inside the ProfileProof project `lmfsqfwdgxlsuozxyauy`; its tables, enums, functions, trigger, bucket and PlotMarket-only accounts were removed from there the same day (verified, all counts zero). Never use that project for PlotMarket again. Verified 27 Sep 2026 that the production bundle at plotmarket.ng embeds `qjlwmpbmrdercymcnroz.supabase.co`. |
+| Supabase org | `Oshylabs` (slug `crkmwalwmkotzpnahsmi`), sole owner plotmarketng@gmail.com since 27 Sep 2026 | Free plan. Created 25 Sep under cadenceoshylabs@gmail.com, ownership handed to plotmarketng@gmail.com on 27 Sep and cadence removed. Any CLI work (`supabase config push`, `db advisors`) must be done after `supabase login` as plotmarketng@gmail.com; the cadence login no longer has access. Dashboard access is through the "Plot" Chrome profile. |
+| Legacy Supabase | Project `jrlcvlvanswyaxecyvwu` ("plotmarket", org `Oshy Labs com plot`, slug `sqpwfwgapnborxpmhrob`) | The original pre-August PlotMarket project. Not referenced by any deployment. Org owners are oshylabs@gmail.com and plotmarketng@gmail.com (oshyltd@gmail.com left 27 Sep). Candidate for pause or deletion once confirmed nothing else reads it; that org also holds the ComplaintForge project. |
 | Payments | Paystack, keys in Vercel env | webhook at `/api/paystack/webhook` needs `SUPABASE_SERVICE_ROLE_KEY` |
 | Email | Resend, verified domain `oshylabs.eu` | see below |
 
@@ -57,6 +58,11 @@ Run after every production deploy. All must pass.
 - `RESEND_API_KEY` added to Vercel production.
 - Supabase org `Oshylabs` created under the cadence account.
 - Tracking issue: github.com/oshylabs-rgb/plotmarket/issues/2
+
+## What changed on 27 Sep 2026
+
+- Supabase org `Oshylabs` (the production project's org) handed from cadenceoshylabs@gmail.com to plotmarketng@gmail.com. No project transfer, no downtime: project ref, database, API keys and Vercel env are all unchanged.
+- Legacy org `Oshy Labs com plot` (old project `jrlcvlvanswyaxecyvwu` plus ComplaintForge): plotmarketng@gmail.com added as Owner, oshyltd@gmail.com left.
 
 ## Open items and risks
 

@@ -136,7 +136,9 @@ policies.
 ## 25 Sep 2026: dedicated project
 
 Plotmarket now runs on its own Supabase project `qjlwmpbmrdercymcnroz` (org
-`Oshylabs`). Migrations 0001, 0002 and 0004 plus the policy half of 0003 were
+`Oshylabs`, owned by plotmarketng@gmail.com since 27 Sep 2026; run
+`npx supabase login` as that account before any CLI command below). Migrations
+0001, 0002 and 0004 plus the policy half of 0003 were
 applied there on 25 Sep 2026, followed by `seed_demo.sql` with the image URLs
 rewritten to the new project. `config.toml` in this folder declares the auth
 settings (site URL, redirect allow list, Resend SMTP) and is pushed with:
