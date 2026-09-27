@@ -19,7 +19,7 @@ vercel ls plotmarket --scope team_Ha87dazpFrZWxGtyiEA0x0zD
 | Repo | github.com/oshylabs-rgb/plotmarket | default branch `master` |
 | Hosting | Vercel project `prj_Et3GQvplmJUrFDzg0Jl39AWmGFSc`, team `team_Ha87dazpFrZWxGtyiEA0x0zD` | git connected |
 | Database and auth | Supabase project `qjlwmpbmrdercymcnroz` ("Plotmarket", org `Oshylabs`, eu-west-2 London), owner cadenceoshylabs@gmail.com | Dedicated to PlotMarket since 25 Sep 2026. Before that PlotMarket lived inside the ProfileProof project `lmfsqfwdgxlsuozxyauy`; its tables, enums, functions, trigger, bucket and PlotMarket-only accounts were removed from there the same day (verified, all counts zero). Never use that project for PlotMarket again. |
-| Supabase org | `Oshylabs` (slug `crkmwalwmkotzpnahsmi`) under cadenceoshylabs@gmail.com | Free plan. The CLI on this machine is logged in as this account. |
+| Supabase org | `Oshylabs` (slug `crkmwalwmkotzpnahsmi`) under cadenceoshylabs@gmail.com | Free plan. The CLI on this machine is logged in as this account. Ownership handover to plotmarketng@gmail.com pending, see `docs/SUPABASE_OWNERSHIP_MIGRATION.md`. |
 | Payments | Paystack, keys in Vercel env | webhook at `/api/paystack/webhook` needs `SUPABASE_SERVICE_ROLE_KEY` |
 | Email | Resend, verified domain `oshylabs.eu` | see below |
 
