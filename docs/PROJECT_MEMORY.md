@@ -58,7 +58,19 @@ Run after every production deploy. All must pass.
 - Supabase org `Oshylabs` created under the cadence account.
 - Tracking issue: github.com/oshylabs-rgb/plotmarket/issues/2
 
+## Tests
+
+- `npm test` runs Vitest (route tests with mocked Supabase; no network, no live Paystack).
+- `npm run test:db` applies every migration to a throwaway local Postgres with Supabase's roles stubbed (`supabase/tests/supabase_stub.sql`) and runs `supabase/tests/*.test.sql` as anon, authenticated and service_role. Needs local Postgres server binaries; never touches a real project.
+
+## What changed on 27 Sep 2026
+
+- Seller plan audit: `docs/PLAN_AUDIT_2026-09-27.md`, with the owner's approved plan decisions in section F.
+- Security fix: migration `0005_lock_privileged_columns.sql`. Before it, any signed in user could make themselves admin, give themselves a paid plan, approve or feature their own listings, write themselves an active subscription, and send enquiries about unpublished listings. Paystack callback and webhook now also refuse charges that do not cover the plan price in NGN. The client-side "Cancel subscription" button is gone; plans are one-off 30 day charges and never renewed.
+
 ## Open items and risks
+
+0. **Migration 0005 must be applied to `qjlwmpbmrdercymcnroz`** (SQL editor, or `supabase db push` from a machine logged in as the cadence account). Until it is, the holes above are open on live. Verify afterwards with `select tgname from pg_trigger where tgname like 'guard_%';` (expect 2 rows) and `select policyname from pg_policies where tablename='subscriptions';` (expect only owner read and admin).
 
 1. Listing pages are server rendered since PR #4 (25 Sep). If a listing ever shows "No properties yet" to curl, check `src/lib/listings.ts` and the anon key first.
 2. Super admin: `superadmin@plotmarket.ng` must exist in the new project (Authentication → Users → Add user) and be promoted with `update public.profiles set role='admin', account_type='enterprise', is_verified=true where email='superadmin@plotmarket.ng'`.

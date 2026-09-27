@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getPlanByPlanId } from '@/constants/pricing'
+import { chargeCoversPlan } from '@/lib/paystack'
 import type { AccountType } from '@/types/database'
 
 export async function GET(request: NextRequest) {
@@ -43,6 +44,10 @@ export async function GET(request: NextRequest) {
     const plan = getPlanByPlanId(planId)
     if (!plan || planId === 'free' || planId === 'enterprise') {
       return NextResponse.redirect(`${dashboardSubscription}?error=invalid_metadata`)
+    }
+    if (!chargeCoversPlan(plan, verifyData.data.amount, verifyData.data.currency)) {
+      console.error('Paystack callback: amount does not cover plan', planId, 'ref', reference)
+      return NextResponse.redirect(`${dashboardSubscription}?error=amount_mismatch`)
     }
     const accountType = plan.planId as AccountType
 
