@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_HREF } from '@/constants/contact'
 
 export const metadata: Metadata = {
   title: 'Terms of Service - Plotmarket',
@@ -237,8 +238,14 @@ export default function TermsOfServicePage() {
             <p className="mt-1 text-sm">Company No. 16883720</p>
             <p className="mt-2 text-sm">
               Email:{' '}
-              <a href="mailto:arnold.oshenye@oshylabs.eu" className="text-brand-green-600 hover:underline">
-                arnold.oshenye@oshylabs.eu
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-brand-green-600 hover:underline">
+                {CONTACT_EMAIL}
+              </a>
+            </p>
+            <p className="mt-1 text-sm">
+              Phone:{' '}
+              <a href={CONTACT_PHONE_HREF} className="tabular text-brand-green-600 hover:underline">
+                {CONTACT_PHONE}
               </a>
             </p>
           </div>

@@ -10,7 +10,7 @@ export default function CookiePolicyPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-gray-900">Cookie Policy</h1>
-      <p className="mt-2 text-sm text-gray-500">Effective Date: 1 January 2026 | Last Updated: 8 April 2026</p>
+      <p className="mt-2 text-sm text-gray-500">Effective Date: 1 January 2026 | Last Updated: 28 September 2026</p>
 
       <div className="mt-10 space-y-10 text-gray-700 leading-relaxed">
         {/* 1. What Are Cookies */}
@@ -58,9 +58,9 @@ export default function CookiePolicyPage() {
             </div>
 
             <div className="rounded-lg border border-brand-cream-300 bg-white p-4">
-              <h3 className="font-semibold text-gray-800">Analytics Cookies</h3>
+              <h3 className="font-semibold text-gray-800">Visit Counting (No Cookies)</h3>
               <p className="mt-1 text-sm">
-                We currently use minimal tracking on the platform. We do not use third-party analytics cookies such as Google Analytics. If we introduce analytics in the future, we will update this policy and obtain your consent where required.
+                We do not use analytics cookies, and no third party analytics such as Google Analytics. We count page visits without cookies or any other stored identifier: the page address, the website that linked to it, any campaign tags in the link, your country and your device type. Nothing is saved on your device and a visit cannot be linked to you. See our <Link href="/privacy" className="text-brand-green-600 hover:underline">Privacy Policy</Link>.
               </p>
             </div>
           </div>

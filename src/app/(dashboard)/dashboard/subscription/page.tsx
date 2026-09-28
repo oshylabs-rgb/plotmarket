@@ -7,6 +7,7 @@ import { Check, CreditCard, Calendar, Loader2, CheckCircle, XCircle, Building2, 
 import { format } from 'date-fns'
 import { BUSINESS_PLAN, LISTING_LIMITS, PILOT_DAYS, PILOT_EXPIRY_TERMS, PUBLIC_PLANS, planName } from '@/constants/plans'
 import { NIGERIAN_STATES } from '@/constants/states'
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_HREF } from '@/constants/contact'
 import { formatNaira } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
@@ -191,8 +192,12 @@ function PlanContent() {
 
       <p className="mt-10 text-sm text-gray-500">
         Larger volumes?{' '}
-        <a href="mailto:arnold.oshenye@oshylabs.eu?subject=Plotmarket%20volume%20listing" className="text-brand-green-700 underline">
+        <a href={`mailto:${CONTACT_EMAIL}?subject=Plotmarket%20volume%20listing`} className="text-brand-green-700 underline">
           Talk to us
+        </a>{' '}
+        or call{' '}
+        <a href={CONTACT_PHONE_HREF} className="tabular whitespace-nowrap text-brand-green-700 underline">
+          {CONTACT_PHONE}
         </a>
         .
       </p>
