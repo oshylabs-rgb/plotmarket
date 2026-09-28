@@ -27,7 +27,7 @@ Phases 2 to 5 of the plan rework. The audit and the owner's decisions are in `do
 - `src/constants/plans.ts` (new, replaces `src/constants/pricing.ts`): the one definition of plan names, limits, price, public copy and pilot expiry terms.
 - `src/lib/paystack.ts`: `grantPaidPlan`, shared by webhook and callback, idempotent, extends from the current end date, rebalances listings after payment.
 - `src/app/api/paystack/{initialize,callback,webhook}/route.ts`: only Business can be bought; amount and NGN checked; a cancel event also rebalances.
-- `src/app/api/cron/plan-expiry/route.ts`, `vercel.json`, `src/lib/email.ts`: daily expiry fallback and the 7-day pilot reminder email (Resend), protected by `CRON_SECRET`.
+- `src/app/api/cron/plan-expiry/route.ts`, `vercel.json`, `src/lib/email.ts`: daily expiry fallback and the 7-day pilot reminder email (Resend), each reminder claimed atomically so it is sent once; `CRON_SECRET` is honoured when set.
 
 **Seller dashboard**
 - `dashboard/subscription/page.tsx` (sidebar label now "Plan"): current plan from the database, usage, Business checkout, pilot request form with the expiry terms shown and acknowledged before requesting.
@@ -54,7 +54,7 @@ Apply to `qjlwmpbmrdercymcnroz` **before** merging this PR. The new code calls `
 2. Run `supabase/checks/live_plan_check.sql`. Review "first expiry run: listings it would pause". Those are accounts whose paid period has already ended; under decision 8 they fall to Free on the first run.
 3. `0006_property_status_paused.sql`, then `0007_plans_and_pilots.sql`.
 4. Run the check again: expect `listing_allowance` = 1. `select jobname, schedule from cron.job;` should list `plotmarket-plan-expiry` (if pg_cron is not available on the plan, the Vercel cron covers it daily).
-5. Set `CRON_SECRET` in Vercel production, then merge.
+5. Merge. `CRON_SECRET` is optional: the cron route only does work that is already due and claims each reminder atomically, so it runs without one; set it later to refuse other callers.
 
 Rollback: every migration ends with a commented rollback block. 0007's restores every paused listing first, then drops the triggers and functions, and keeps the `pilots` table and the new columns (inert without the functions) so no data is lost. Re-run 0005 afterwards to restore its guard and enquiry policy.
 
