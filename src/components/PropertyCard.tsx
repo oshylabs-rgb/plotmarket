@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { MapPin, Bed, Bath, Maximize, ShieldCheck, Rotate3d, ScrollText } from 'lucide-react'
+import { MapPin, Bed, Bath, Maximize, Rotate3d, ScrollText } from 'lucide-react'
 import { TITLE_DOCUMENT_LABELS, type Property } from '@/types/database'
 import { formatNaira, getPropertyGradient } from '@/lib/utils'
 
@@ -64,7 +64,12 @@ export function PropertyCard({ property }: { property: Property }) {
           </span>
         </div>
         <div className="absolute right-3 top-3 flex flex-col items-end gap-1.5">
-          {property.is_featured && (
+          {property.is_demo && (
+            <span className="rounded-full bg-ink-900 px-2.5 py-0.5 text-xs font-semibold text-white">
+              Demo listing, not for sale
+            </span>
+          )}
+          {property.is_featured && !property.is_demo && (
             <span className="rounded-full bg-brand-green-600 px-2.5 py-0.5 text-xs font-semibold text-white">
               Featured
             </span>
@@ -78,9 +83,12 @@ export function PropertyCard({ property }: { property: Property }) {
         </div>
 
         {titleLabel && (
-          <span className="stamp stamp-stated absolute bottom-3 left-3">
+          <span
+            className="stamp stamp-stated absolute bottom-3 left-3"
+            title="Title-document type stated by the seller. Not verified by Plotmarket."
+          >
             <ScrollText className="h-3 w-3" />
-            {titleLabel}
+            {titleLabel} <span className="sr-only">(stated by the seller, not verified)</span>
           </span>
         )}
       </div>
@@ -123,12 +131,7 @@ export function PropertyCard({ property }: { property: Property }) {
               <span className="tabular">{property.area} m²</span>
             </div>
           )}
-          {property.is_verified && (
-            <div className="ml-auto flex items-center gap-1 text-xs font-medium text-brand-green-600">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              Verified
-            </div>
-          )}
+
         </div>
       </div>
     </Link>

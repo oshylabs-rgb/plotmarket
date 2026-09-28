@@ -10,7 +10,7 @@ export default function TermsOfServicePage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-gray-900">Terms of Service</h1>
-      <p className="mt-2 text-sm text-gray-500">Effective Date: 1 January 2026 | Last Updated: 8 April 2026</p>
+      <p className="mt-2 text-sm text-gray-500">Effective Date: 1 January 2026 | Last Updated: 28 September 2026</p>
 
       <div className="mt-10 space-y-10 text-gray-700 leading-relaxed">
         {/* 1. Acceptance */}
@@ -122,20 +122,20 @@ export default function TermsOfServicePage() {
           </ul>
         </section>
 
-        {/* 7. Subscriptions and Payments */}
+        {/* 7. Plans and Payments */}
         <section>
-          <h2 className="text-xl font-semibold text-gray-900">7. Subscription Plans and Payments</h2>
-          <p className="mt-3">Plotmarket offers subscription plans that determine the number of property listings you can maintain. By subscribing to a plan:</p>
+          <h2 className="text-xl font-semibold text-gray-900">7. Plans and Payments</h2>
+          <p className="mt-3">Your plan sets how many active listings you can have. An active listing is one that is live or waiting for review; paused, sold and rejected listings do not count.</p>
           <ul className="mt-3 list-disc space-y-2 pl-6">
-            <li>You authorise Oshylabs Ltd to charge the applicable subscription fee through Paystack</li>
-            <li>Subscriptions are billed according to the plan period you select</li>
-            <li>Subscriptions may auto-renew at the end of each billing period unless cancelled</li>
-            <li>You may cancel your subscription at any time through your dashboard; cancellation takes effect at the end of the current billing period</li>
-            <li>Refunds are not provided for partial billing periods unless required by applicable Nigerian consumer protection law</li>
-            <li>Prices may change with reasonable notice; continued use after a price change constitutes acceptance</li>
+            <li><strong>Free Starter</strong> is free with no time limit and allows up to 3 active listings.</li>
+            <li><strong>Business</strong> allows up to 100 active listings for 30 days per payment. You pay once through Paystack for each 30 day period. It does not renew or charge you automatically. Paying again before the period ends extends it by 30 days from the current end date.</li>
+            <li><strong>Founding Developer Pilot</strong> is offered by invitation to selected developers and property companies. It is free, needs no card, and is never charged automatically. It allows up to 20 active listings in one nominated estate or project for 30 days from the moment we approve it, and includes one assisted setup session with our team. Each company may have one pilot.</li>
+            <li>When a paid period or a pilot ends, nothing is deleted. Your earliest published listings, up to the Free Starter limit, stay live. The rest are paused: hidden from buyers and search but kept, and restored if you pay for Business. You can choose which listings stay live.</li>
+            <li>Refunds are not provided for part of a period unless required by applicable Nigerian consumer protection law.</li>
+            <li>Prices may change with reasonable notice. A price change never applies to a period you have already paid for.</li>
           </ul>
           <p className="mt-2">
-            Payment processing is handled by Paystack in accordance with their terms of service and PCI DSS requirements.
+            Paystack processes plan payments in accordance with its terms of service and PCI DSS requirements. Paystack is used only for Plotmarket plan fees. Plotmarket does not take, hold or protect any payment for a property.
           </p>
         </section>
 

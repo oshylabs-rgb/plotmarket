@@ -1,72 +1,61 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Check, Star, CreditCard, Calendar, AlertCircle, Loader2, CheckCircle, XCircle } from 'lucide-react'
-import { PRICING_PLANS } from '@/constants/pricing'
-import { formatNaira } from '@/lib/utils'
+import Link from 'next/link'
+import { Check, CreditCard, Calendar, Loader2, CheckCircle, XCircle, Building2, Info } from 'lucide-react'
 import { format } from 'date-fns'
+import { BUSINESS_PLAN, LISTING_LIMITS, PILOT_DAYS, PILOT_EXPIRY_TERMS, PUBLIC_PLANS, planName } from '@/constants/plans'
+import { NIGERIAN_STATES } from '@/constants/states'
+import { formatNaira } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import type { Subscription } from '@/types/database'
+import { usePlanStatus } from '@/hooks/usePlanStatus'
 
-function SubscriptionContent() {
+const PAYMENT_ERRORS: Record<string, string> = {
+  payment_failed: 'The payment did not go through, so nothing was charged and your plan has not changed.',
+  missing_reference: 'We could not match that payment. Nothing has changed. If you were charged, email us with the Paystack receipt.',
+  invalid_metadata: 'We could not match that payment to a plan. If you were charged, email us with the Paystack receipt.',
+  amount_mismatch: 'The amount paid does not match the plan price, so the plan was not activated. Email us with the Paystack receipt.',
+  subscription_creation_failed: 'Your payment was received but we could not switch your plan on. It will retry automatically; if it has not changed within an hour, email us.',
+  verification_failed: 'We could not confirm the payment with Paystack. If you were charged, it will be applied automatically once Paystack confirms it.',
+}
+
+const businessCopy = PUBLIC_PLANS.find((p) => p.key === 'professional')!
+const pilotCopy = PUBLIC_PLANS.find((p) => p.key === 'pilot')!
+
+function PlanContent() {
   const { user, profile, loading: authLoading } = useAuth()
+  const { status, loading: planLoading, error: planError, refresh } = usePlanStatus(user?.id)
   const searchParams = useSearchParams()
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [subscribingPlan, setSubscribingPlan] = useState<string | null>(null)
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState('')
 
   const successParam = searchParams.get('success')
   const errorParam = searchParams.get('error')
 
-  useEffect(() => {
-    if (!user) return
-
-    const fetchSubscription = async () => {
-      const supabase = createClient()
-      const { data } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(1)
-
-      setSubscription(data?.[0] || null)
-      setLoading(false)
-    }
-
-    fetchSubscription()
-  }, [user])
-
-  const handleSubscribe = async (planId: string) => {
-    if (!user) return
-    setSubscribingPlan(planId)
-
+  const handleBuyBusiness = async () => {
+    setPaying(true)
+    setPayError('')
     try {
       const response = await fetch('/api/paystack/initialize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ planId: BUSINESS_PLAN.planId }),
       })
-
       const data = await response.json()
-
       if (data.authorization_url) {
-        // Redirect to Paystack checkout
         window.location.assign(data.authorization_url)
-      } else {
-        alert(data.error || 'Failed to initialize payment')
-        setSubscribingPlan(null)
+        return
       }
+      setPayError(data.error || 'Could not start the payment. Nothing was charged.')
     } catch {
-      alert('An error occurred. Please try again.')
-      setSubscribingPlan(null)
+      setPayError('Could not reach the payment page. Nothing was charged. Please try again.')
     }
+    setPaying(false)
   }
 
-  if (authLoading || loading) {
+  if (authLoading || planLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
@@ -74,182 +63,287 @@ function SubscriptionContent() {
     )
   }
 
-  const currentPlanId = subscription?.plan || profile?.account_type || 'basic'
+  if (!status) {
+    return (
+      <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        We could not load your plan. {planError}
+      </div>
+    )
+  }
 
-  // Map old 'basic' account type to 'free' planId for comparison
-  const currentPlanKey = currentPlanId === 'basic' ? 'free' : currentPlanId
+  const limitLabel =
+    status.max_active === null ? 'No limit' : `${status.active_count} of ${status.max_active} active listings`
+  const showBusinessOffer = status.plan !== 'enterprise'
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900">Subscription</h1>
-      <p className="mt-1 text-gray-500">Manage your subscription and billing</p>
+      <h1 className="text-2xl font-bold text-gray-900">Plan</h1>
+      <p className="mt-1 text-gray-500">What you can list, and what happens next.</p>
 
-      {/* Success Banner */}
       {successParam === 'true' && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
           <CheckCircle className="h-5 w-5 shrink-0" />
-          <span>Payment successful! Your subscription is now active.</span>
+          <span>Payment received. Business is active, and any listings paused for the old limit are live again.</span>
         </div>
       )}
-
-      {/* Error Banner */}
       {errorParam && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div role="alert" className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <XCircle className="h-5 w-5 shrink-0" />
-          <span>
-            {errorParam === 'payment_failed'
-              ? 'Payment failed. Please try again.'
-              : errorParam === 'missing_reference'
-              ? 'Payment reference missing. Please contact support.'
-              : errorParam === 'invalid_metadata'
-              ? 'Invalid payment data. Please contact support.'
-              : errorParam === 'amount_mismatch'
-              ? 'The amount paid does not match the plan price, so the plan was not activated. Please contact support.'
-              : errorParam === 'subscription_creation_failed'
-              ? 'Payment was received but subscription setup failed. Please contact support.'
-              : `An error occurred: ${errorParam}`}
-          </span>
+          <span>{PAYMENT_ERRORS[errorParam] ?? 'Something went wrong with the payment. Nothing has changed.'}</span>
         </div>
       )}
 
-      {/* Current Plan */}
-      {subscription && subscription.status === 'active' ? (
-        <div className="mt-6 rounded-xl border-2 border-brand-green-400 bg-brand-green-50 p-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-brand-green-600" />
-                <h2 className="text-lg font-semibold text-brand-green-800">Current Plan</h2>
-              </div>
-              <p className="mt-2 text-2xl font-bold capitalize text-brand-green-700">
-                {subscription.plan}
-              </p>
-              <p className="mt-1 text-sm text-brand-green-600">
-                {formatNaira(subscription.amount)} for 30 days
-              </p>
-            </div>
-            <span className="rounded-full bg-green-100 px-3 py-1 text-sm font-medium capitalize text-green-700">
-              {subscription.status}
-            </span>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-4 text-sm text-brand-green-600">
+      {/* Current plan */}
+      <section className="mt-6 rounded-xl border-2 border-brand-green-400 bg-brand-green-50 p-6" aria-labelledby="current-plan">
+        <div className="flex items-center gap-2">
+          <CreditCard className="h-5 w-5 text-brand-green-600" />
+          <h2 id="current-plan" className="text-lg font-semibold text-brand-green-800">Current plan</h2>
+        </div>
+        <p className="mt-2 text-2xl font-bold text-brand-green-700">{planName(status.plan)}</p>
+        <p className="mt-1 text-sm text-brand-green-700">{limitLabel}</p>
+        {status.paused_count > 0 && (
+          <p className="mt-1 text-sm text-brand-green-700">
+            {status.paused_count} paused {status.paused_count === 1 ? 'listing is' : 'listings are'} hidden
+            from buyers but kept. <Link href="/dashboard/listings" className="underline">Manage listings</Link>
+          </p>
+        )}
+        <div className="mt-3 flex flex-wrap gap-4 text-sm text-brand-green-700">
+          {status.paid_until && (
             <span className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              Started: {format(new Date(subscription.start_date), 'MMM d, yyyy')}
+              {planName(status.paid_plan)} paid until {format(new Date(status.paid_until), 'd MMM yyyy')}
             </span>
+          )}
+          {status.plan === 'pilot' && status.pilot_ends_at && (
             <span className="flex items-center gap-1">
-              <AlertCircle className="h-4 w-4" />
-              Ends: {format(new Date(subscription.end_date), 'MMM d, yyyy')}
+              <Calendar className="h-4 w-4" />
+              Pilot ends {format(new Date(status.pilot_ends_at), "d MMM yyyy, HH:mm")}
             </span>
-          </div>
-          <p className="mt-4 text-sm text-brand-green-700">
-            This plan does not renew or charge you automatically. Nothing needs cancelling.
-          </p>
+          )}
         </div>
-      ) : (
-        <div className="mt-6 rounded-xl border-2 border-brand-cream-300 bg-brand-cream-50 p-6">
-          <div className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5 text-gray-500" />
-            <h2 className="text-lg font-semibold text-gray-800">Free Plan</h2>
-          </div>
-          <p className="mt-2 text-sm text-gray-600">
-            You are currently on the free plan with up to 3 listings.
+        {status.paid_until && (
+          <p className="mt-3 text-sm text-brand-green-700">
+            Paid plans do not renew or charge you automatically. Pay again before the end date to extend by{' '}
+            {BUSINESS_PLAN.periodDays} days from that date.
           </p>
-        </div>
+        )}
+        {status.plan === 'pilot' && (
+          <p className="mt-3 text-sm text-brand-green-700">
+            Pilot listings must be in {status.pilot_project_name}, {status.pilot_project_state}. {PILOT_EXPIRY_TERMS}
+          </p>
+        )}
+      </section>
+
+      {/* Business */}
+      {showBusinessOffer && (
+        <section className="mt-8 rounded-xl border border-brand-gold-400 bg-white p-6 shadow-sm" aria-labelledby="business-plan">
+          <h2 id="business-plan" className="text-lg font-semibold text-gray-900">{BUSINESS_PLAN.name}</h2>
+          <p className="mt-1">
+            <span className="text-2xl font-bold text-brand-green-700">{formatNaira(BUSINESS_PLAN.price)}</span>
+            <span className="text-sm text-gray-500"> per {BUSINESS_PLAN.periodDays} days</span>
+          </p>
+          <ul className="mt-4 space-y-2">
+            {businessCopy.features.map((feature) => (
+              <li key={feature} className="flex items-start gap-2 text-sm text-gray-600">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-green-500" />
+                {feature}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-xs text-gray-500">
+            Paystack processes the card or transfer for this plan fee only. Plotmarket does not take, hold or
+            protect payments for property.
+          </p>
+          {payError && (
+            <p role="alert" className="mt-3 text-sm text-red-600">{payError}</p>
+          )}
+          <button
+            type="button"
+            className="btn btn-secondary mt-4 w-full sm:w-auto"
+            disabled={paying}
+            onClick={handleBuyBusiness}
+          >
+            {paying ? (
+              <span className="flex items-center justify-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Opening Paystack...
+              </span>
+            ) : status.paid_until ? (
+              `Extend by ${BUSINESS_PLAN.periodDays} days`
+            ) : (
+              `Pay ${formatNaira(BUSINESS_PLAN.price)} for ${BUSINESS_PLAN.periodDays} days`
+            )}
+          </button>
+        </section>
       )}
 
-      {/* Upgrade Options */}
-      <h2 className="mt-10 text-xl font-semibold text-gray-900">
-        {currentPlanKey === 'enterprise' ? 'Your Plan' : 'Upgrade Your Plan'}
-      </h2>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {PRICING_PLANS.filter((p) => p.planId !== 'free').map((plan) => {
-          const isCurrent = plan.planId === currentPlanKey
-          const isEnterprise = plan.planId === 'enterprise'
-          const isSubscribing = subscribingPlan === plan.planId
+      {/* Founding Developer Pilot */}
+      {status.plan !== 'enterprise' && (
+        <PilotSection
+          userId={user!.id}
+          defaultCompany={profile?.company_name ?? ''}
+          defaultCac={profile?.cac_number ?? ''}
+          pilotStatus={status.pilot_status}
+          pilotEndsAt={status.pilot_ends_at}
+          projectName={status.pilot_project_name}
+          onRequested={refresh}
+        />
+      )}
 
-          return (
-            <div
-              key={plan.name}
-              className={`relative rounded-xl border p-5 ${
-                isCurrent
-                  ? 'border-brand-green-400 bg-brand-green-50'
-                  : plan.highlighted
-                  ? 'border-brand-gold-400 bg-white shadow-md'
-                  : 'border-brand-cream-300 bg-white'
-              }`}
-            >
-              {plan.highlighted && !isCurrent && (
-                <span className="absolute -top-2.5 left-4 rounded-full bg-brand-gold-400 px-2.5 py-0.5 text-xs font-bold text-brand-green-900">
-                  <Star className="inline h-3 w-3" /> Popular
-                </span>
-              )}
-              {isCurrent && (
-                <span className="absolute -top-2.5 left-4 rounded-full bg-brand-green-600 px-2.5 py-0.5 text-xs font-bold text-white">
-                  Current Plan
-                </span>
-              )}
-              <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
-              <p className="mt-1">
-                {isEnterprise ? (
-                  <span className="text-2xl font-bold text-brand-green-700">Custom</span>
-                ) : (
-                  <>
-                    <span className="text-2xl font-bold text-brand-green-700">
-                      {formatNaira(plan.price)}
-                    </span>
-                    <span className="text-sm text-gray-500">{plan.period}</span>
-                  </>
-                )}
-              </p>
-              <ul className="mt-4 space-y-2">
-                {plan.features.slice(0, 4).map((feature) => (
-                  <li key={feature} className="flex items-start gap-2 text-sm text-gray-600">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-green-500" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-              {isEnterprise ? (
-                <a
-                  href="mailto:sales@plotmarket.ng"
-                  className="btn btn-outline mt-4 w-full text-center"
-                >
-                  Contact Sales
-                </a>
-              ) : (
-                <button
-                  className={`btn mt-4 w-full ${
-                    isCurrent
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : plan.highlighted
-                      ? 'btn-secondary'
-                      : 'btn-outline'
-                  }`}
-                  disabled={isCurrent || isSubscribing}
-                  onClick={() => handleSubscribe(plan.planId)}
-                >
-                  {isSubscribing ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Redirecting...
-                    </span>
-                  ) : isCurrent ? (
-                    'Current Plan'
-                  ) : (
-                    'Subscribe'
-                  )}
-                </button>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      <p className="mt-10 text-sm text-gray-500">
+        Larger volumes?{' '}
+        <a href="mailto:arnold.oshenye@oshylabs.eu?subject=Plotmarket%20volume%20listing" className="text-brand-green-700 underline">
+          Talk to us
+        </a>
+        .
+      </p>
     </div>
   )
 }
 
-export default function SubscriptionPage() {
+function PilotSection({
+  userId,
+  defaultCompany,
+  defaultCac,
+  pilotStatus,
+  pilotEndsAt,
+  projectName,
+  onRequested,
+}: {
+  userId: string
+  defaultCompany: string
+  defaultCac: string
+  pilotStatus: string | null
+  pilotEndsAt: string | null
+  projectName: string | null
+  onRequested: () => void
+}) {
+  const [form, setForm] = useState({
+    company_name: defaultCompany,
+    cac_number: defaultCac,
+    project_name: '',
+    project_state: '',
+    project_area: '',
+  })
+  const [accepted, setAccepted] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!accepted) {
+      setError('Please confirm you have read what happens when the pilot ends.')
+      return
+    }
+    setSaving(true)
+    setError('')
+    const { error: insertError } = await createClient()
+      .from('pilots')
+      .insert({ user_id: userId, ...form, project_area: form.project_area || null })
+    setSaving(false)
+    if (insertError) {
+      setError(
+        insertError.code === '23505'
+          ? 'This account or company has already had a pilot request. Email us if you think that is wrong.'
+          : insertError.message
+      )
+      return
+    }
+    onRequested()
+  }
+
+  const update = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+
+  return (
+    <section id="pilot" className="mt-8 rounded-xl border border-brand-cream-300 bg-white p-6 shadow-sm" aria-labelledby="pilot-heading">
+      <div className="flex items-center gap-2">
+        <Building2 className="h-5 w-5 text-brand-green-600" />
+        <h2 id="pilot-heading" className="text-lg font-semibold text-gray-900">{pilotCopy.name}</h2>
+      </div>
+      <p className="mt-2 text-sm text-gray-600">{pilotCopy.summary}</p>
+
+      {pilotStatus === 'requested' && (
+        <p className="mt-4 rounded-lg bg-brand-gold-50 px-4 py-3 text-sm text-brand-gold-800">
+          Request received for {projectName}. We review every request by hand and will email you. Nothing
+          changes on your account until a pilot is approved.
+        </p>
+      )}
+      {pilotStatus === 'active' && pilotEndsAt && (
+        <p className="mt-4 rounded-lg bg-brand-green-50 px-4 py-3 text-sm text-brand-green-800">
+          Your pilot for {projectName} is active until {format(new Date(pilotEndsAt), "d MMM yyyy, HH:mm")}.
+        </p>
+      )}
+      {(pilotStatus === 'expired' || pilotStatus === 'revoked') && (
+        <p className="mt-4 rounded-lg bg-brand-cream-100 px-4 py-3 text-sm text-gray-700">
+          Your pilot {pilotStatus === 'expired' ? 'ended' : 'was ended'}
+          {pilotEndsAt ? ` on ${format(new Date(pilotEndsAt), 'd MMM yyyy')}` : ''}. Each company can have one pilot.
+          Your listings and data are kept; upgrade to Business to bring paused listings back.
+        </p>
+      )}
+      {pilotStatus === 'rejected' && (
+        <p className="mt-4 rounded-lg bg-brand-cream-100 px-4 py-3 text-sm text-gray-700">
+          Your pilot request was not approved this time. You can keep listing on Free Starter or Business.
+        </p>
+      )}
+
+      {!pilotStatus && (
+        <form onSubmit={submit} className="mt-4 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Company name
+              <input name="company_name" value={form.company_name} onChange={update} className="input-field mt-1" required />
+            </label>
+            <label className="block text-sm font-medium text-gray-700">
+              CAC registration number
+              <input name="cac_number" value={form.cac_number} onChange={update} className="input-field mt-1" required />
+            </label>
+            <label className="block text-sm font-medium text-gray-700">
+              Estate or project name
+              <input name="project_name" value={form.project_name} onChange={update} className="input-field mt-1" required />
+            </label>
+            <label className="block text-sm font-medium text-gray-700">
+              State
+              <select name="project_state" value={form.project_state} onChange={update} className="input-field mt-1" required>
+                <option value="">Select state</option>
+                {NIGERIAN_STATES.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block text-sm font-medium text-gray-700 sm:col-span-2">
+              Area (optional)
+              <input name="project_area" value={form.project_area} onChange={update} className="input-field mt-1" placeholder="e.g. Sangotedo" />
+            </label>
+          </div>
+
+          <div className="rounded-lg bg-brand-cream-50 p-4 text-sm text-gray-700">
+            <p className="flex items-start gap-2 font-medium text-gray-900">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-green-600" />
+              What happens when the pilot ends
+            </p>
+            <p className="mt-2">{PILOT_EXPIRY_TERMS}</p>
+            <p className="mt-2">
+              The pilot covers up to {LISTING_LIMITS.pilot} active listings in the one estate you name here, for{' '}
+              {PILOT_DAYS} days from the day we approve it. It includes one
+              assisted setup session with our team. Each company can have one pilot.
+            </p>
+            <label className="mt-3 flex items-start gap-2">
+              <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-1" />
+              <span>I have read what happens when the pilot ends.</span>
+            </label>
+          </div>
+
+          {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
+          <button type="submit" className="btn btn-primary" disabled={saving}>
+            {saving ? 'Sending...' : 'Request a pilot'}
+          </button>
+        </form>
+      )}
+    </section>
+  )
+}
+
+export default function PlanPage() {
   return (
     <Suspense
       fallback={
@@ -258,7 +352,7 @@ export default function SubscriptionPage() {
         </div>
       }
     >
-      <SubscriptionContent />
+      <PlanContent />
     </Suspense>
   )
 }

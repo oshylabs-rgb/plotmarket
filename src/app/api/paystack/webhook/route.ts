@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getPlanByPlanId, type PricingPlan } from '@/constants/pricing'
-import { chargeCoversPlan } from '@/lib/paystack'
+import { getPurchasablePlan } from '@/constants/plans'
+import { chargeCoversPlan, grantPaidPlan } from '@/lib/paystack'
 import type { AccountType } from '@/types/database'
 
 /**
@@ -21,17 +21,6 @@ function verifyWebhookSignature(body: string, signature: string): boolean {
   if (a.length !== b.length) return false
   return crypto.timingSafeEqual(a, b)
 }
-
-/**
- * Only plans that can actually be bought online may be granted by a webhook.
- * 'free' is not an account type and 'enterprise' is sold by hand.
- */
-function resolvePurchasablePlan(planId: string): PricingPlan | null {
-  if (planId === 'free' || planId === 'enterprise') return null
-  return getPlanByPlanId(planId) ?? null
-}
-
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,7 +47,8 @@ export async function POST(request: NextRequest) {
         // Not one of our subscription charges.
         if (!userId || !planId) break
 
-        const plan = resolvePurchasablePlan(planId)
+        // Only plans sold online. 'free', 'enterprise' and the legacy ids are refused.
+        const plan = getPurchasablePlan(planId)
         if (!plan) {
           console.error('Paystack webhook: unknown plan_id', planId, 'ref', reference)
           break
@@ -68,51 +58,19 @@ export async function POST(request: NextRequest) {
           console.error('Paystack webhook: amount does not cover plan', planId, 'ref', reference)
           break
         }
-        const accountType = plan.planId as AccountType
 
-        // Idempotency. Paystack retries, and the callback route records the
-        // same reference, so this can legitimately run more than once.
-        const { data: existing, error: lookupError } = await supabase
-          .from('subscriptions')
-          .select('id')
-          .eq('paystack_reference', reference)
-          .limit(1)
-
-        if (lookupError) {
-          console.error('Paystack webhook: subscription lookup failed', lookupError)
-          return NextResponse.json({ error: 'Lookup failed' }, { status: 500 })
-        }
-
-        if (existing && existing.length > 0) break
-
-        const { error: insertError } = await supabase.from('subscriptions').insert({
-          user_id: userId,
-          plan: accountType,
-          amount: amount / 100,
-          start_date: new Date().toISOString(),
-          end_date: new Date(Date.now() + THIRTY_DAYS_MS).toISOString(),
-          status: 'active',
-          paystack_reference: reference,
-          paystack_subscription_code: null,
-          paystack_customer_code: customer?.customer_code || null,
-          paystack_plan_code: null,
+        const result = await grantPaidPlan(supabase, {
+          userId,
+          plan,
+          amountKobo: amount,
+          reference,
+          customerCode: customer?.customer_code || null,
         })
-
-        if (insertError) {
-          // Returning 500 makes Paystack retry. Swallowing this would leave a
-          // paying customer on the free plan with nothing in the logs.
-          console.error('Paystack webhook: subscription insert failed', insertError)
-          return NextResponse.json({ error: 'Insert failed' }, { status: 500 })
-        }
-
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ account_type: accountType })
-          .eq('id', userId)
-
-        if (profileError) {
-          console.error('Paystack webhook: profile upgrade failed', profileError)
-          return NextResponse.json({ error: 'Profile update failed' }, { status: 500 })
+        if (!result.ok) {
+          // Returning 500 makes Paystack retry, which is safe: every step is
+          // idempotent. Swallowing this would leave a paying customer on Free.
+          console.error('Paystack webhook: grant failed at', result.step, result.error)
+          return NextResponse.json({ error: 'Grant failed' }, { status: 500 })
         }
         break
       }
@@ -189,6 +147,15 @@ export async function POST(request: NextRequest) {
             console.error('Paystack webhook: downgrade failed', downgradeError)
             return NextResponse.json({ error: 'Downgrade failed' }, { status: 500 })
           }
+        }
+
+        // Fit the listings to whatever allowance is left (pauses the excess).
+        const { error: allowanceError } = await supabase.rpc('apply_allowance', {
+          p_user: sub[0].user_id,
+        })
+        if (allowanceError) {
+          console.error('Paystack webhook: allowance after cancel failed', allowanceError)
+          return NextResponse.json({ error: 'Allowance failed' }, { status: 500 })
         }
         break
       }

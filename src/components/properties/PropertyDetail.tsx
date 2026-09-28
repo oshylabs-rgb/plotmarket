@@ -39,7 +39,12 @@ export function PropertyDetail({ property, agent }: { property: Property; agent:
     })
 
     if (error) {
-      setInquiryError(error.message)
+      // Row level security refuses enquiries about listings that are no longer live.
+      setInquiryError(
+        error.code === '42501'
+          ? 'This listing is no longer taking enquiries.'
+          : error.message
+      )
     } else {
       setInquirySent(true)
     }
@@ -57,6 +62,13 @@ export function PropertyDetail({ property, agent }: { property: Property; agent:
         <ArrowLeft className="h-4 w-4" />
         Back to properties
       </Link>
+
+      {property.is_demo && (
+        <div role="note" className="mb-6 rounded-lg border border-ink-900 bg-ink-900 px-4 py-3 text-sm text-white">
+          <strong>Demo listing, not for sale.</strong> Plotmarket created this sample to show how a listing
+          looks. The property, price and contact details are not real, and it cannot receive enquiries.
+        </div>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-3">
         {/* Main content */}
@@ -238,12 +250,7 @@ export function PropertyDetail({ property, agent }: { property: Property; agent:
                 <span className="font-medium">{property.area} m²</span>
               </div>
             )}
-            {property.is_verified && (
-              <div className="flex items-center gap-2 rounded-lg bg-brand-green-50 px-4 py-2.5">
-                <Shield className="h-5 w-5 text-brand-green-600" />
-                <span className="font-medium text-brand-green-700">Verified</span>
-              </div>
-            )}
+
           </div>
 
           {/* Title document */}
@@ -258,9 +265,9 @@ export function PropertyDetail({ property, agent }: { property: Property; agent:
                   {TITLE_DOCUMENT_LABELS[property.title_document]}
                 </p>
                 <p className="mt-1 text-sm text-gray-500">
-                  Stated by the seller. Plotmarket does not verify title documents. Always confirm
-                  at the relevant state land registry, and instruct your own solicitor, before you
-                  pay any money.
+                  Title-document type stated by the seller. Plotmarket does not verify title documents
+                  or ownership. Always confirm at the relevant state land registry, and instruct your
+                  own solicitor, before you pay any money.
                 </p>
               </>
             ) : (
@@ -339,12 +346,10 @@ export function PropertyDetail({ property, agent }: { property: Property; agent:
                   </p>
                 </div>
               </div>
-              {agent.is_verified && (
-                <div className="mt-3 flex items-center gap-1 text-sm text-brand-green-600">
-                  <Shield className="h-4 w-4" />
-                  Verified
-                </div>
-              )}
+              <p className="mt-3 text-xs text-gray-500">
+                Name and phone as given by the seller. Plotmarket reviews listings before they go live;
+                it does not verify the seller&apos;s identity, ownership or title.
+              </p>
               <div className="mt-4 space-y-2">
                 <a
                   href={`tel:${agent.phone}`}
@@ -370,12 +375,16 @@ export function PropertyDetail({ property, agent }: { property: Property; agent:
               <MessageSquare className="h-5 w-5 text-brand-green-600" />
               Send Inquiry
             </h3>
-            {inquirySent ? (
+            {property.is_demo ? (
+              <p className="mt-4 text-sm text-gray-500">
+                Enquiries are closed: this is a demo listing, not a real property.
+              </p>
+            ) : inquirySent ? (
               <div className="mt-4 rounded-lg bg-brand-green-50 p-4 text-center">
                 <Shield className="mx-auto h-8 w-8 text-brand-green-500" />
                 <p className="mt-2 font-medium text-brand-green-700">Inquiry Sent!</p>
                 <p className="text-sm text-brand-green-600">
-                  The listing owner will get back to you shortly.
+                  Your message is in the seller&apos;s Plotmarket inbox. They reply to you directly.
                 </p>
               </div>
             ) : (

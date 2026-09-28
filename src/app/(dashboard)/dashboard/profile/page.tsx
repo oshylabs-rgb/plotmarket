@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { User, Mail, Phone, Lock, Save, Shield, Building2, Users, Loader2, FileText } from 'lucide-react'
+import { User, Mail, Phone, Lock, Save, Building2, Users, Loader2, FileText } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
 
@@ -140,11 +140,6 @@ export default function ProfilePage() {
                 <TypeIcon className="h-3 w-3" />
                 {userTypeInfo?.label || 'Individual'}
               </span>
-              {profile?.is_verified && (
-                <span className="flex items-center gap-1 text-xs text-brand-green-600">
-                  <Shield className="h-3 w-3" /> Verified
-                </span>
-              )}
             </div>
           </div>
           <div className="mt-6 space-y-3 border-t border-brand-cream-200 pt-4">

@@ -2,18 +2,22 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Plus, Search, Edit, Trash2, Eye, Loader2 } from 'lucide-react'
+import { Plus, Search, Trash2, Eye, Loader2, PauseCircle, PlayCircle, BadgeCheck } from 'lucide-react'
 import { formatNaira, getStatusColor } from '@/lib/utils'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import type { Property } from '@/types/database'
+import { usePlanStatus } from '@/hooks/usePlanStatus'
+import { friendlyListingError, planName } from '@/constants/plans'
+import type { Property, PropertyStatus } from '@/types/database'
 
 export default function ListingsPage() {
   const { user, loading: authLoading } = useAuth()
   const [search, setSearch] = useState('')
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
+  const [actionError, setActionError] = useState('')
+  const { status: plan, refresh: refreshPlan } = usePlanStatus(user?.id)
 
   useEffect(() => {
     if (!user) return
@@ -34,14 +38,36 @@ export default function ListingsPage() {
   }, [user])
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this listing?')) return
+    if (!confirm('Delete this listing for good? Its photos and details cannot be recovered. Pausing hides it and keeps everything.')) return
 
     const supabase = createClient()
     const { error } = await supabase.from('properties').delete().eq('id', id)
 
-    if (!error) {
-      setProperties((prev) => prev.filter((p) => p.id !== id))
+    if (error) {
+      setActionError(error.message)
+      return
     }
+    setProperties((prev) => prev.filter((p) => p.id !== id))
+    refreshPlan()
+  }
+
+  // Owners may pause a live or pending listing, bring a paused one back, or
+  // mark a live one sold. The database checks the allowance on restore.
+  const changeStatus = async (property: Property, next: PropertyStatus) => {
+    setActionError('')
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('properties')
+      .update({ status: next })
+      .eq('id', property.id)
+      .select()
+      .single()
+    if (error) {
+      setActionError(friendlyListingError(error.message))
+      return
+    }
+    setProperties((prev) => prev.map((p) => (p.id === property.id ? (data as Property) : p)))
+    refreshPlan()
   }
 
   const filteredProperties = properties.filter((p) =>
@@ -68,6 +94,26 @@ export default function ListingsPage() {
           Add Property
         </Link>
       </div>
+
+      {plan && (
+        <p className="mt-4 rounded-lg bg-brand-cream-50 px-4 py-3 text-sm text-gray-700">
+          {planName(plan.plan)}:{' '}
+          {plan.max_active === null
+            ? `${plan.active_count} active listings`
+            : `${plan.active_count} of ${plan.max_active} active listings in use`}
+          {plan.paused_count > 0 && `, ${plan.paused_count} paused`}. Pending and live listings count;
+          paused, rejected and sold ones do not. Paused listings are hidden from buyers but kept, and you
+          can bring one back when a slot is free.{' '}
+          <Link href="/dashboard/subscription" className="text-brand-green-700 underline">
+            Plan details
+          </Link>
+        </p>
+      )}
+      {actionError && (
+        <p role="alert" className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {actionError}
+        </p>
+      )}
 
       {/* Search */}
       <div className="mt-6">
@@ -144,19 +190,52 @@ export default function ListingsPage() {
                       href={`/properties/${property.id}`}
                       className="rounded-lg p-2 text-gray-400 hover:bg-brand-cream-100 hover:text-brand-green-600"
                       title="View"
+                      aria-label={`View ${property.title}`}
                     >
                       <Eye className="h-4 w-4" />
                     </Link>
-                    <button
-                      className="rounded-lg p-2 text-gray-400 hover:bg-brand-cream-100 hover:text-brand-green-600"
-                      title="Edit"
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
+                    {(property.status === 'approved' || property.status === 'pending') && (
+                      <button
+                        type="button"
+                        onClick={() => changeStatus(property, 'paused')}
+                        className="rounded-lg p-2 text-gray-400 hover:bg-brand-cream-100 hover:text-brand-green-600"
+                        title="Pause (hide from buyers, keep everything)"
+                        aria-label={`Pause ${property.title}`}
+                      >
+                        <PauseCircle className="h-4 w-4" />
+                      </button>
+                    )}
+                    {property.status === 'paused' && property.paused_from && (
+                      <button
+                        type="button"
+                        onClick={() => changeStatus(property, property.paused_from as PropertyStatus)}
+                        className="rounded-lg p-2 text-gray-400 hover:bg-brand-cream-100 hover:text-brand-green-600"
+                        title="Bring back"
+                        aria-label={`Bring back ${property.title}`}
+                      >
+                        <PlayCircle className="h-4 w-4" />
+                      </button>
+                    )}
+                    {property.status === 'approved' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (confirm('Mark this listing as sold? It will come off the site and cannot be relisted.')) {
+                            changeStatus(property, 'sold')
+                          }
+                        }}
+                        className="rounded-lg p-2 text-gray-400 hover:bg-brand-cream-100 hover:text-brand-green-600"
+                        title="Mark sold"
+                        aria-label={`Mark ${property.title} sold`}
+                      >
+                        <BadgeCheck className="h-4 w-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDelete(property.id)}
                       className="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600"
                       title="Delete"
+                      aria-label={`Delete ${property.title}`}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

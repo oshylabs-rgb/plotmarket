@@ -4,7 +4,19 @@ import { useEffect, useState } from 'react'
 import { Search, Shield, ShieldOff, UserCheck, Trash2, Loader2 } from 'lucide-react'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
+import { planName } from '@/constants/plans'
 import type { Profile } from '@/types/database'
+
+interface PlanRow {
+  user_id: string
+  plan: string
+  max_active: number | null
+  active_count: number
+  paused_count: number
+  paid_until: string | null
+  pilot_status: string | null
+  pilot_ends_at: string | null
+}
 
 export default function AdminUsersPage() {
   const [search, setSearch] = useState('')
@@ -12,6 +24,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [actionError, setActionError] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [plans, setPlans] = useState<Record<string, PlanRow>>({})
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -22,6 +35,14 @@ export default function AdminUsersPage() {
         .order('created_at', { ascending: false })
 
       setUsers(data || [])
+
+      // Plan status computed by the same database function that enforces it.
+      const { data: overview, error: overviewError } = await supabase.rpc('admin_plan_overview')
+      if (overviewError) {
+        setActionError(`Could not load plan status. ${overviewError.message}`)
+      } else {
+        setPlans(Object.fromEntries(((overview as PlanRow[]) ?? []).map((r) => [r.user_id, r])))
+      }
       setLoading(false)
     }
 
@@ -127,7 +148,7 @@ export default function AdminUsersPage() {
               <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:table-cell">Type</th>
               <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 lg:table-cell">Company</th>
               <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 sm:table-cell">Plan</th>
-              <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 md:table-cell">Verified</th>
+              <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 md:table-cell">Admin flag</th>
               <th className="hidden px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 md:table-cell">Joined</th>
               <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-500">Actions</th>
             </tr>
@@ -174,9 +195,30 @@ export default function AdminUsersPage() {
                   )}
                 </td>
                 <td className="hidden px-4 py-3 sm:table-cell">
-                  <span className="rounded-full bg-brand-green-100 px-2.5 py-0.5 text-xs font-medium capitalize text-brand-green-700">
-                    {user.account_type}
-                  </span>
+                  {plans[user.id] ? (
+                    <div className="text-xs text-gray-700">
+                      <span className="rounded-full bg-brand-green-100 px-2.5 py-0.5 font-medium text-brand-green-700">
+                        {planName(plans[user.id].plan)}
+                      </span>
+                      <p className="mt-1 tabular">
+                        {plans[user.id].active_count}
+                        {plans[user.id].max_active !== null && ` of ${plans[user.id].max_active}`} active
+                        {plans[user.id].paused_count > 0 && `, ${plans[user.id].paused_count} paused`}
+                      </p>
+                      {plans[user.id].paid_until && (
+                        <p>Paid until {format(new Date(plans[user.id].paid_until!), 'd MMM yyyy')}</p>
+                      )}
+                      {plans[user.id].pilot_status && (
+                        <p>
+                          Pilot {plans[user.id].pilot_status}
+                          {plans[user.id].pilot_ends_at &&
+                            `, ends ${format(new Date(plans[user.id].pilot_ends_at!), 'd MMM yyyy')}`}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">{user.account_type}</span>
+                  )}
                 </td>
                 <td className="hidden px-4 py-3 md:table-cell">
                   {user.is_verified ? (
@@ -196,9 +238,10 @@ export default function AdminUsersPage() {
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => handleVerify(user.id, user.is_verified)}
-                      aria-label={user.is_verified ? 'Unverify account' : 'Verify account'}
+                      aria-label={user.is_verified ? 'Clear internal admin flag' : 'Set internal admin flag'}
                       className="flex h-11 w-11 items-center justify-center rounded-lg text-gray-400 hover:bg-brand-green-50 hover:text-brand-green-600"
-                      title={user.is_verified ? 'Unverify' : 'Verify'}
+                      title="Internal flag only. Not shown to buyers and not an identity or title check."
+
                     >
                       <UserCheck className="h-4 w-4" />
                     </button>

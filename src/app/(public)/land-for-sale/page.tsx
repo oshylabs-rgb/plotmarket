@@ -9,11 +9,11 @@ export const revalidate = 600
 export const metadata: Metadata = {
   title: 'Land for sale in Nigeria with title documents shown',
   description:
-    'Land and property for sale in Lagos, Abuja, Ogun, Oyo and Rivers. Every listing states its title document, C of O, Governor’s Consent, Excision, Gazette or Deed, and names the seller.',
+    'Land and property for sale in Lagos, Abuja, Ogun, Oyo and Rivers. Listings show the title document the seller states, C of O, Governor’s Consent, Excision, Gazette or Deed, and name the seller.',
   alternates: { canonical: 'https://plotmarket.ng/land-for-sale' },
   openGraph: {
     title: 'Land for sale in Nigeria with title documents shown',
-    description: 'Browse by area. Every listing states its title document and names the seller.',
+    description: 'Browse by area. Listings show the title document the seller states, and name the seller.',
     url: 'https://plotmarket.ng/land-for-sale',
   },
 }

@@ -11,7 +11,7 @@ export function Footer() {
           <div className="md:col-span-2">
             <Logo light />
             <p className="mt-3 text-sm text-brand-green-200">
-              Land and property across all 36 states and the FCT. Every listing states its title document and names the seller.
+              Land and property across all 36 states and the FCT. Listings show the title document the seller states, and name the seller.
             </p>
             <p className="mt-2 text-xs text-brand-green-300">
               Plotmarket is a product of Oshylabs Ltd

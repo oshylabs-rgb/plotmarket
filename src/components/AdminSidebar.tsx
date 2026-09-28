@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   Shield,
+  Rocket,
 } from 'lucide-react'
 import { Logo } from './Logo'
 import { createClient } from '@/lib/supabase/client'
@@ -21,6 +22,7 @@ const SIDEBAR_LINKS = [
   { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/properties', label: 'Properties', icon: Building2 },
   { href: '/admin/subscriptions', label: 'Subscriptions', icon: CreditCard },
+  { href: '/admin/pilots', label: 'Pilots', icon: Rocket },
 ]
 
 export function AdminSidebar() {

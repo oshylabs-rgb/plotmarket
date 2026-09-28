@@ -40,7 +40,7 @@ export default function OpenGraphImage() {
             Land and property in Nigeria, with the papers shown
           </div>
           <div style={{ fontSize: 30, color: '#cfe3d6', fontFamily: 'Helvetica, Arial, sans-serif' }}>
-            Title document and seller named on every listing
+            Title documents as stated by sellers, sellers named
           </div>
         </div>
         <div

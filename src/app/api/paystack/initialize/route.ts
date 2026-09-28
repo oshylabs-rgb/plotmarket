@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { PRICING_PLANS } from '@/constants/pricing'
+import { getPurchasablePlan } from '@/constants/plans'
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,17 +22,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'planId is required' }, { status: 400 })
     }
 
-    // Find the plan
-    const plan = PRICING_PLANS.find((p) => p.planId === planId)
+    // Only plans sold online can be checked out.
+    const plan = getPurchasablePlan(planId)
     if (!plan) {
-      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
-    }
-
-    if (plan.planId === 'free' || plan.planId === 'enterprise') {
-      return NextResponse.json(
-        { error: 'This plan does not support online checkout' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'This plan cannot be bought online' }, { status: 400 })
     }
 
     // Amount in kobo (Naira * 100)

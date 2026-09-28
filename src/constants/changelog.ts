@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.5.0'
+export const APP_VERSION = '0.6.0'
 
 export interface Release {
   version: string
@@ -8,6 +8,18 @@ export interface Release {
 
 /** Newest first. Keep entries factual and user facing. */
 export const CHANGELOG: Release[] = [
+  {
+    version: '0.6.0',
+    date: '2026-09-28',
+    changes: [
+      'Three seller plans. Free Starter: up to 3 active listings, free with no time limit. Business: up to 100 active listings for ₦35,000 per 30 days, paid once through Paystack with no automatic renewal. Founding Developer Pilot: selected developers can request 30 days, one estate and up to 20 active listings, approved by hand.',
+      'Plan limits are now enforced on our servers for every way a listing can be created or brought back, not just in the browser.',
+      'When a plan ends nothing is deleted. Listings over the new limit are paused, hidden from buyers but kept, and you choose which ones stay live.',
+      'Sellers can pause, bring back and mark listings sold from My Listings.',
+      'Demo listings are clearly labelled, kept off the home page and search engines, and cannot receive enquiries.',
+      'The "Verified" badge is gone from listings. It suggested checks Plotmarket does not make. Title documents are shown as stated by the seller.',
+    ],
+  },
   {
     version: '0.5.0',
     date: '2026-09-13',

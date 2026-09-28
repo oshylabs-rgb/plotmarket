@@ -8,7 +8,7 @@ export type PropertyType = 'house' | 'apartment' | 'land' | 'commercial' | 'deve
 
 export type ListingType = 'sale' | 'rent' | 'lease'
 
-export type PropertyStatus = 'pending' | 'approved' | 'rejected' | 'sold'
+export type PropertyStatus = 'pending' | 'approved' | 'rejected' | 'sold' | 'paused'
 
 export type SubscriptionStatus = 'active' | 'expired' | 'cancelled'
 
@@ -75,7 +75,53 @@ export interface Property {
   status: PropertyStatus
   is_featured: boolean
   is_verified: boolean
+  /** Sample listing made by Plotmarket; never real inventory. */
+  is_demo: boolean
+  published_at: string | null
+  paused_from: PropertyStatus | null
+  paused_reason: 'plan_limit' | 'owner' | null
+  estate_name: string | null
+  pilot_id: string | null
   created_at: string
+}
+
+export type PilotStatus = 'requested' | 'active' | 'expired' | 'rejected' | 'revoked'
+
+export interface Pilot {
+  id: string
+  user_id: string
+  status: PilotStatus
+  company_name: string
+  cac_number: string
+  project_name: string
+  project_state: string
+  project_area: string | null
+  terms_accepted_at: string
+  requested_at: string
+  decided_at: string | null
+  decided_by: string | null
+  activated_at: string | null
+  ends_at: string | null
+  setup_session_at: string | null
+  expiry_warning_sent_at: string | null
+  admin_notes: string | null
+  created_at: string
+}
+
+/** One row from the plan_status() database function. */
+export interface PlanStatus {
+  plan: 'basic' | 'pilot' | 'professional' | 'starter' | 'business' | 'enterprise'
+  /** null means no limit */
+  max_active: number | null
+  active_count: number
+  paused_count: number
+  paid_plan: string | null
+  paid_until: string | null
+  pilot_id: string | null
+  pilot_status: PilotStatus | null
+  pilot_ends_at: string | null
+  pilot_project_name: string | null
+  pilot_project_state: string | null
 }
 
 export interface Subscription {
@@ -113,7 +159,19 @@ export interface Database {
       }
       properties: {
         Row: Property
-        Insert: Omit<Property, 'id' | 'created_at' | 'status' | 'is_featured' | 'is_verified'>
+        Insert: Omit<
+          Property,
+          | 'id'
+          | 'created_at'
+          | 'status'
+          | 'is_featured'
+          | 'is_verified'
+          | 'is_demo'
+          | 'published_at'
+          | 'paused_from'
+          | 'paused_reason'
+          | 'pilot_id'
+        >
         Update: Partial<Omit<Property, 'id' | 'created_at'>>
       }
       subscriptions: {
