@@ -32,6 +32,14 @@ begin
   if to_regprocedure('public.is_admin()') is null then
     raise exception 'Apply migration 0003 (public.is_admin) before 0005';
   end if;
+  -- 0007 replaces guard_property_privileged_columns and the inquiries
+  -- policy below with newer versions. Re-running 0005 after it would
+  -- silently downgrade both, so refuse instead. This aborts the whole file
+  -- when it runs as one request (SQL editor, apply_migration, db push);
+  -- with psql use --single-transaction or ON_ERROR_STOP=1.
+  if to_regprocedure('public.enforce_listing_allowance()') is not null then
+    raise exception 'Migration 0007 is already applied; re-running 0005 would downgrade its listing guard. Skip 0005.';
+  end if;
 end $$;
 
 -- ---------------------------------------------------------------
