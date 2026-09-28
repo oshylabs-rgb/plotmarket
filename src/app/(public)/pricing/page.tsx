@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Check } from 'lucide-react'
 import { PILOT_EXPIRY_TERMS, PUBLIC_PLANS } from '@/constants/plans'
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_HREF } from '@/constants/contact'
 
 export const metadata: Metadata = {
   title: 'Pricing for listers',
@@ -93,11 +94,17 @@ export default function PricingPage() {
         <h2 className="text-xl font-semibold text-gray-900">Larger volumes?</h2>
         <p className="mt-2 text-gray-500">If you need more than 100 active listings, talk to us.</p>
         <a
-          href="mailto:arnold.oshenye@oshylabs.eu?subject=Plotmarket%20volume%20listing"
+          href={`mailto:${CONTACT_EMAIL}?subject=Plotmarket%20volume%20listing`}
           className="btn btn-primary mt-4 inline-block"
         >
           Talk to us
         </a>
+        <p className="mt-3 text-sm text-gray-500">
+          Or call{' '}
+          <a href={CONTACT_PHONE_HREF} className="tabular whitespace-nowrap text-brand-green-700 underline">
+            {CONTACT_PHONE}
+          </a>
+        </p>
       </div>
     </div>
   )

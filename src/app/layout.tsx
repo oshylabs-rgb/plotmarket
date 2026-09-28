@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import './globals.css'
 import { CookieConsent } from '@/components/CookieConsent'
+import { VisitBeacon } from '@/components/VisitBeacon'
+import { CONTACT_EMAIL, CONTACT_PHONE_E164 } from '@/constants/contact'
 
 /**
  * Self-hosted through next/font rather than a third-party stylesheet: one less
@@ -67,7 +69,8 @@ const ORGANIZATION_JSON_LD = {
   legalName: 'Oshylabs Ltd',
   url: 'https://plotmarket.ng',
   logo: 'https://plotmarket.ng/opengraph-image',
-  email: 'arnold.oshenye@oshylabs.eu',
+  email: CONTACT_EMAIL,
+  telephone: CONTACT_PHONE_E164,
   areaServed: 'NG',
   description:
     'Nigerian land and property marketplace where listings show the seller stated title document and name the seller.',
@@ -105,6 +108,7 @@ export default function RootLayout({
         />
         {children}
         <CookieConsent />
+        <VisitBeacon />
       </body>
     </html>
   )

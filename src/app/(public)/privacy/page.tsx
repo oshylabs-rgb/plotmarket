@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_HREF } from '@/constants/contact'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy - Plotmarket',
@@ -10,7 +11,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-gray-900">Privacy Policy</h1>
-      <p className="mt-2 text-sm text-gray-500">Effective Date: 1 January 2026 | Last Updated: 8 April 2026</p>
+      <p className="mt-2 text-sm text-gray-500">Effective Date: 1 January 2026 | Last Updated: 28 September 2026</p>
 
       <div className="mt-10 space-y-10 text-gray-700 leading-relaxed">
         {/* 1. Who We Are */}
@@ -55,7 +56,8 @@ export default function PrivacyPolicyPage() {
             </div>
             <div>
               <h3 className="font-semibold text-gray-800">Usage and Technical Data</h3>
-              <p className="mt-1">Browser type, device information, IP address, pages visited, and interaction patterns collected automatically when you use the platform.</p>
+              <p className="mt-1">Browser type, device information, IP address, pages visited, and interaction patterns collected automatically when you use the platform. Our hosting provider records IP addresses in its server logs.</p>
+              <p className="mt-2">We also count page visits without cookies. For each page view we record the page address, the website that linked to it, any campaign tags in the link, your country, and whether you are on a phone, tablet or computer. These counts hold no IP address, account or other identifier, so a visit cannot be linked to you.</p>
             </div>
           </div>
         </section>
@@ -161,6 +163,7 @@ export default function PrivacyPolicyPage() {
             <li><strong>Media Files:</strong> Retained for the duration of the associated listing. Removed when the listing is deleted.</li>
             <li><strong>Payment Records:</strong> Retained for 6 years to comply with Nigerian tax and financial regulations.</li>
             <li><strong>Communication Data:</strong> Inquiry messages are retained for up to 24 months.</li>
+            <li><strong>Visit Counts:</strong> Kept for up to 400 days, then deleted automatically.</li>
             <li><strong>Usage Data:</strong> Aggregated and anonymised data may be retained indefinitely for analytical purposes.</li>
           </ul>
         </section>
@@ -197,8 +200,14 @@ export default function PrivacyPolicyPage() {
             <p className="mt-1 text-sm">Company No. 16883720</p>
             <p className="mt-2 text-sm">
               Email:{' '}
-              <a href="mailto:arnold.oshenye@oshylabs.eu" className="text-brand-green-600 hover:underline">
-                arnold.oshenye@oshylabs.eu
+              <a href={`mailto:${CONTACT_EMAIL}`} className="text-brand-green-600 hover:underline">
+                {CONTACT_EMAIL}
+              </a>
+            </p>
+            <p className="mt-1 text-sm">
+              Phone:{' '}
+              <a href={CONTACT_PHONE_HREF} className="tabular text-brand-green-600 hover:underline">
+                {CONTACT_PHONE}
               </a>
             </p>
           </div>

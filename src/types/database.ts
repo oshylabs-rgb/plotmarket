@@ -52,6 +52,13 @@ export interface Profile {
   created_at: string
 }
 
+/** The seller details a public listing page shows. Nothing else leaves the server. */
+export const SELLER_CONTACT_COLUMNS = 'id, full_name, phone, email, user_type, company_name, avatar_url'
+export type SellerContact = Pick<
+  Profile,
+  'id' | 'full_name' | 'phone' | 'email' | 'user_type' | 'company_name' | 'avatar_url'
+>
+
 export interface Property {
   id: string
   user_id: string

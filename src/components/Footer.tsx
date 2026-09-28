@@ -1,7 +1,8 @@
 import { Logo } from './Logo'
 import Link from 'next/link'
-import { Mail } from 'lucide-react'
+import { Mail, Phone } from 'lucide-react'
 import { APP_VERSION } from '@/constants/changelog'
+import { CONTACT_EMAIL, CONTACT_PHONE, CONTACT_PHONE_HREF } from '@/constants/contact'
 
 export function Footer() {
   return (
@@ -41,11 +42,20 @@ export function Footer() {
             <ul className="mt-3 space-y-2">
               <li>
                 <a
-                  href="mailto:arnold.oshenye@oshylabs.eu"
+                  href={CONTACT_PHONE_HREF}
+                  className="flex items-start gap-1.5 text-sm text-brand-green-200 hover:text-brand-gold-400 transition-colors"
+                >
+                  <Phone className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span className="tabular whitespace-nowrap">{CONTACT_PHONE}</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`mailto:${CONTACT_EMAIL}`}
                   className="flex items-start gap-1.5 text-sm text-brand-green-200 hover:text-brand-gold-400 transition-colors"
                 >
                   <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                  <span className="break-all">arnold.oshenye@oshylabs.eu</span>
+                  <span className="break-all">{CONTACT_EMAIL}</span>
                 </a>
               </li>
             </ul>

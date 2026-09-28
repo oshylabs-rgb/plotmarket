@@ -87,9 +87,41 @@ test('real listing: seller-stated title, enquiry open, listing markup present', 
   await expect(page.getByText('Title-document type stated by the seller.', { exact: false })).toBeVisible()
   await expect(page.getByText('does not verify the seller', { exact: false })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Send Inquiry' })).toBeVisible()
-  expect(await page.content()).toContain('"@type":"RealEstateListing"')
+  const html = await page.content()
+  expect(html).toContain('"@type":"RealEstateListing"')
+  // Only the seller's public contact details reach the page; these two
+  // columns exist on profiles only.
+  for (const field of ['account_type', 'cac_number']) {
+    expect(html, `seller ${field} leaked into the page`).not.toContain(field)
+  }
   await expectNoBannedClaims(page)
   await expectNoHorizontalScroll(page)
+})
+
+test('Nigerian contact number: footer, pricing, legal pages and organisation markup', async ({ page }) => {
+  await page.goto('/pricing')
+  const footerPhone = page.locator('footer a[href="tel:+2348032179317"]')
+  await expect(footerPhone).toHaveText('+234 803 217 9317')
+  await expect(page.locator('main a[href="tel:+2348032179317"]').first()).toBeVisible()
+  expect(await page.content()).toContain('"telephone":"+2348032179317"')
+  for (const path of ['/terms', '/privacy']) {
+    await page.goto(path)
+    await expect(page.locator('main a[href="tel:+2348032179317"]')).toHaveText('+234 803 217 9317')
+  }
+  await expectNoHorizontalScroll(page)
+})
+
+test('each page view sends one cookieless beacon with no personal data', async ({ page, context }) => {
+  const bodies: unknown[] = []
+  await page.route('**/api/visit', async (route) => {
+    bodies.push(JSON.parse(route.request().postDataBuffer()?.toString() || '{}'))
+    await route.fulfill({ status: 204 })
+  })
+  await page.goto('/pricing?utm_source=whatsapp&utm_campaign=pilot')
+  await expect.poll(() => bodies.length).toBe(1)
+  expect(bodies[0]).toEqual({ path: '/pricing', referrer: '', search: '?utm_source=whatsapp&utm_campaign=pilot' })
+  const cookies = await context.cookies()
+  expect(cookies.map((c) => c.name)).toEqual([])
 })
 
 test('demo listing: labelled, enquiries closed, hidden from search engines', async ({ page }) => {

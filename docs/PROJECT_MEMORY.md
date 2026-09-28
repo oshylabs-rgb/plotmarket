@@ -1,6 +1,6 @@
 # PlotMarket project memory
 
-Living notes for whoever works on plotmarket.ng next, human or agent. Keep it short and current. Last updated 25 Sep 2026.
+Living notes for whoever works on plotmarket.ng next, human or agent. Keep it short and current. Last updated 28 Sep 2026.
 
 ## The one rule
 
@@ -33,7 +33,7 @@ Symptom to remember: registering an address that already exists shows the "Check
 
 ## Vercel production environment
 
-Must exist: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (sensitive, cannot be pulled), `NEXT_PUBLIC_APP_URL=https://plotmarket.ng`, `PAYSTACK_SECRET_KEY`, `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY`, `RESEND_API_KEY`. Verified present on 25 Sep.
+Must exist: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (sensitive, cannot be pulled; also used by `/api/visit`), `NEXT_PUBLIC_APP_URL=https://plotmarket.ng`, `PAYSTACK_SECRET_KEY`, `NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY`, `RESEND_API_KEY`, `CRON_SECRET`. Verified present on 25 Sep; `CRON_SECRET` on 28 Sep.
 
 ## Post deploy verification checklist
 
@@ -41,7 +41,8 @@ Run after every production deploy. All must pass.
 
 - `https://plotmarket.ng/robots.txt` returns 200 and contains `Sitemap: https://plotmarket.ng/sitemap.xml`
 - `https://plotmarket.ng/sitemap.xml` returns 200 with at least 30 URLs including `/guides/` and `/land-for-sale/` pages
-- `https://plotmarket.ng/pricing` shows exactly Free, Professional ₦35,000, Enterprise
+- `https://plotmarket.ng/pricing` shows exactly Free Starter, Founding Developer Pilot, Business ₦35,000 per 30 days, and the phone +234 803 217 9317
+- `https://plotmarket.ng/api/health/plans` returns 200 with every check `ok`
 - `curl https://plotmarket.ng/` HTML contains at least one real listing title and not "No properties yet" 
 - `curl https://plotmarket.ng/properties` HTML contains listing cards and no spinner
 - `curl https://plotmarket.ng/properties/<any approved listing id>` contains a `RealEstateListing` JSON-LD block and the seller name (get an id with `select id from public.properties where status='approved' limit 1`)
@@ -74,12 +75,21 @@ Run after every production deploy. All must pass.
 
 Free Starter 3 active listings; Founding Developer Pilot 20 in one estate for 30 days from admin activation, invitation only; Business ₦35,000 per 30 days, 100 active, one-off Paystack charge, no auto-renew. Defined once in `src/constants/plans.ts`, enforced in the database by migration 0007 (`plan_status`, `listing_allowance` trigger, `run_plan_expiry`). Full report: `docs/PLANS_IMPLEMENTATION_2026-09-28.md`. Internal id for Business is `professional`; `business` is the legacy 500-listing plan.
 
+## Privacy, analytics, contact and outreach (28 Sep 2026)
+
+- **Profile privacy.** Migration 0008 (applied live 28 Sep): the public reads only profiles of sellers with an approved listing; signed-in users read their own profile and the other party of an enquiry; admins read all. Before it, the anon key could list all 13 accounts' emails and phones. Migration 0010: the anon role can read only `id, full_name, phone, email, user_type, company_name, avatar_url`; apply it only after the code that selects `SELLER_CONTACT_COLUMNS` (PR #10) is live, or listing pages lose the seller card.
+- **Analytics.** First-party and cookieless, no third party. `VisitBeacon` (root layout) posts path, referrer and `?utm_*` to `/api/visit`, which records production traffic only (service role, bot filter, same-origin check) into `page_views` (0009): path, referrer host, UTM, country, device. No IP, no identifier. Admins see it with the seller funnel on `/admin` (Traffic and funnel, 7/30/90 days) via `admin_traffic_summary()`. Rows over 400 days are pruned by pg_cron job `plotmarket-page-view-retention`. Vercel Web Analytics was not used: it needs a dashboard toggle the API cannot flip.
+- **Contact.** Nigerian line +234 803 217 9317, defined once in `src/constants/contact.ts`; shown in the footer, pricing, dashboard Plan page, terms, privacy and the Organization JSON-LD. Not advertised as WhatsApp.
+- **Outreach.** `docs/outreach/PILOT_OUTREACH_PACK.md` is the only current pack (pilot offer, never-say list, NDPA rules, UTM links, email, WhatsApp, LinkedIn, call, follow ups, objections). The 4 Sep Google Doc with the 90-day / 500 / ₦80,000 offer is retired.
+- **Live verification 28 Sep** (rolled back, nothing persisted): Free 4th listing refused; self-admin and self-subscription refused; pilot request, 30 days, 21st listing and other-estate listing refused; expiry keeps the 3 earliest live and pauses the rest with no rows deleted; anon sees live sellers only; no enquiries on paused listings.
+- **Database access from cloud sessions** works through the Supabase connector signed in as cadencebyoshy@gmail.com (owner of org Oshylabs). pg_cron 1.6.4: `plotmarket-plan-expiry` (every 15 min) and `plotmarket-page-view-retention` (daily 03:17 UTC) both active.
+
 ## Open items and risks
 
-0a. **Seller plans live since 28 Sep 2026** (PRs #6, #7, #8). Migrations 0005, 0006 and 0007 verified live on 28 Sep 15:21 UTC through `https://plotmarket.ng/api/health/plans` (all `ok`; 0005 is implied because 0007 refuses to run without it). `CRON_SECRET` is set in Vercel production. **Still unverified: the `plotmarket-plan-expiry` pg_cron job** (`select jobname from cron.job;`); the daily Vercel cron at `/api/cron/plan-expiry` runs the same expiry regardless. Never re-run 0005 after 0007; it now refuses to. Cloud sessions reach the database only when the Supabase connector is authorised with the login that owns org "Oshylabs" (Arnold, 28 Sep: cadencebyoshy@gmail.com, signed in on the Olabs browser; older notes say cadenceoshylabs@gmail.com). The "Oshylabs3" org cannot see the project, and cloud containers cannot reach supabase.co directly. Cloud sessions have no browser.
+0a. **Seller plans live since 28 Sep 2026** (PRs #6, #7, #8). Migrations 0005 to 0009 applied and verified live on 28 Sep. `CRON_SECRET` is set in Vercel production. The `plotmarket-plan-expiry` pg_cron job is verified active and succeeding; the daily Vercel cron at `/api/cron/plan-expiry` is the fallback and sends reminders. Never re-run 0005 after 0007; it now refuses to. Cloud sessions reach the database only when the Supabase connector is authorised with the login that owns org "Oshylabs" (Arnold, 28 Sep: cadencebyoshy@gmail.com, signed in on the Olabs browser; older notes say cadenceoshylabs@gmail.com). The "Oshylabs3" org cannot see the project, and cloud containers cannot reach supabase.co directly. Cloud sessions have no browser.
 0. ~~Migration 0005 must be applied~~ Applied (see 0a). Historical note: **Migration 0005 must be applied to `qjlwmpbmrdercymcnroz`** (SQL editor, or `supabase db push` from a machine logged in as the cadence account). Until it is, the holes above are open on live. Verify afterwards with `select tgname from pg_trigger where tgname like 'guard_%';` (expect 2 rows) and `select policyname from pg_policies where tablename='subscriptions';` (expect only owner read and admin).
 
 1. Listing pages are server rendered since PR #4 (25 Sep). If a listing ever shows "No properties yet" to curl, check `src/lib/listings.ts` and the anon key first.
 2. Super admin: `superadmin@plotmarket.ng` must exist in the new project (Authentication → Users → Add user) and be promoted with `update public.profiles set role='admin', account_type='enterprise', is_verified=true where email='superadmin@plotmarket.ng'`.
-3. Security advisors: re-run `supabase db advisors --linked --project-ref qjlwmpbmrdercymcnroz --type security` after the first real users arrive; enable leaked password protection.
+3. Security advisors: run 28 Sep. Fixed by 0008: `plan_listing_limit` search_path, `handle_new_user` callable through the API. Remaining WARNs are intentional (SECURITY DEFINER RPCs that check the caller themselves; `page_views` has RLS on and no policies by design). Leaked password protection needs the Supabase Pro plan: a money decision for Arnold. Re-run after the first real users arrive.
 6. Legacy `starter` and `business` plan ids are still honoured for existing subscribers via `LEGACY_PLAN_LIMITS` in `src/constants/pricing.ts`.

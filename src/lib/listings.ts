@@ -1,6 +1,6 @@
 import { createPublicClient } from '@/lib/supabase/public'
 import type { LaunchArea } from '@/constants/areas'
-import type { Profile, Property } from '@/types/database'
+import { SELLER_CONTACT_COLUMNS, type Property, type SellerContact } from '@/types/database'
 
 /**
  * Public, approved only listing reads for server rendered pages.
@@ -56,7 +56,7 @@ export async function getListingAvailability(id: string): Promise<'live' | 'unav
 
 export async function getApprovedPropertyWithSeller(
   id: string
-): Promise<{ property: Property; seller: Profile | null } | null> {
+): Promise<{ property: Property; seller: SellerContact | null } | null> {
   const supabase = createPublicClient()
   if (!supabase) return null
   const { data: property } = await supabase
@@ -68,10 +68,10 @@ export async function getApprovedPropertyWithSeller(
   if (!property) return null
   const { data: seller } = await supabase
     .from('profiles')
-    .select('*')
+    .select(SELLER_CONTACT_COLUMNS)
     .eq('id', (property as Property).user_id)
     .maybeSingle()
-  return { property: property as Property, seller: (seller as Profile | null) ?? null }
+  return { property: property as Property, seller: (seller as SellerContact | null) ?? null }
 }
 
 export async function getApprovedListingsForState(state: string, limit = 200): Promise<Property[]> {

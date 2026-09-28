@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Users, Building2, CreditCard, MessageSquare, Loader2 } from 'lucide-react'
 import { formatNaira } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
+import { TrafficPanel } from '@/components/admin/TrafficPanel'
 import {
   BarChart,
   Bar,
@@ -202,6 +203,8 @@ export default function AdminDashboardPage() {
           </div>
         )}
       </div>
+
+      <TrafficPanel />
 
       {/* Empty state when no data */}
       {stateData.length === 0 && typeData.length === 0 && (
