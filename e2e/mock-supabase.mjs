@@ -20,7 +20,14 @@ function applyFilters(rows, params) {
     }
   }
   const limit = params.get('limit')
-  return limit ? out.slice(0, Number(limit)) : out
+  if (limit) out = out.slice(0, Number(limit))
+  // Honour a column list like PostgREST does, so tests see what a page asks for.
+  const select = params.get('select')
+  if (select && select !== '*') {
+    const cols = select.split(',').map((c) => c.trim())
+    out = out.map((r) => Object.fromEntries(cols.filter((c) => c in r).map((c) => [c, r[c]])))
+  }
+  return out
 }
 
 function send(res, status, body, headers = {}) {

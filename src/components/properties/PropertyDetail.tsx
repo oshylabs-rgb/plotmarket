@@ -7,14 +7,14 @@ import { formatNaira, getPropertyGradient } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { Viewer360 } from '@/components/Viewer360'
-import { TITLE_DOCUMENT_LABELS, type Property, type Profile } from '@/types/database'
+import { TITLE_DOCUMENT_LABELS, type Property, type SellerContact } from '@/types/database'
 
 /**
  * Client half of the listing page. The listing and its seller arrive from the
  * Server Component page; this component keeps the gallery, 360 viewer and
  * inquiry form interactive.
  */
-export function PropertyDetail({ property, agent }: { property: Property; agent: Profile | null }) {
+export function PropertyDetail({ property, agent }: { property: Property; agent: SellerContact | null }) {
   const { user } = useAuth()
   const [currentImage, setCurrentImage] = useState(0)
   const [inquiryMessage, setInquiryMessage] = useState('')
