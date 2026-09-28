@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.6.0'
+export const APP_VERSION = '0.6.1'
 
 export interface Release {
   version: string
@@ -8,6 +8,15 @@ export interface Release {
 
 /** Newest first. Keep entries factual and user facing. */
 export const CHANGELOG: Release[] = [
+  {
+    version: '0.6.1',
+    date: '2026-09-28',
+    changes: [
+      'Your contact details are private. The public sees only sellers with a live listing, and only the contact details shown on that listing. A buyer is visible only to the sellers they have contacted, and to Plotmarket admins.',
+      'Plotmarket has a Nigerian phone line: +234 803 217 9317, in the footer, on pricing and on the legal pages.',
+      'We now count page visits without cookies or any personal data, so we can see which pages help sellers and buyers. The privacy and cookie policies explain exactly what is kept.',
+    ],
+  },
   {
     version: '0.6.0',
     date: '2026-09-28',
