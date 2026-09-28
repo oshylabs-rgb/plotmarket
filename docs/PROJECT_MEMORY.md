@@ -61,6 +61,7 @@ Run after every production deploy. All must pass.
 ## Tests
 
 - `npm test` runs Vitest (route tests with mocked Supabase; no network, no live Paystack).
+- `npm run test:e2e` builds the app and runs Playwright at 375px and 1280px against `e2e/mock-supabase.mjs` (fixture listings, no real project). Playwright is pinned to 1.56.1 to match the container's chromium-1194.
 - `npm run test:db` applies every migration to a throwaway local Postgres with Supabase's roles stubbed (`supabase/tests/supabase_stub.sql`) and runs `supabase/tests/*.test.sql` as anon, authenticated and service_role. Needs local Postgres server binaries; never touches a real project.
 
 ## What changed on 27 Sep 2026
@@ -68,8 +69,13 @@ Run after every production deploy. All must pass.
 - Seller plan audit: `docs/PLAN_AUDIT_2026-09-27.md`, with the owner's approved plan decisions in section F.
 - Security fix: migration `0005_lock_privileged_columns.sql`. Before it, any signed in user could make themselves admin, give themselves a paid plan, approve or feature their own listings, write themselves an active subscription, and send enquiries about unpublished listings. Paystack callback and webhook now also refuse charges that do not cover the plan price in NGN. The client-side "Cancel subscription" button is gone; plans are one-off 30 day charges and never renewed.
 
+## Seller plans (28 Sep 2026)
+
+Free Starter 3 active listings; Founding Developer Pilot 20 in one estate for 30 days from admin activation, invitation only; Business ₦35,000 per 30 days, 100 active, one-off Paystack charge, no auto-renew. Defined once in `src/constants/plans.ts`, enforced in the database by migration 0007 (`plan_status`, `listing_allowance` trigger, `run_plan_expiry`). Full report: `docs/PLANS_IMPLEMENTATION_2026-09-28.md`. Internal id for Business is `professional`; `business` is the legacy 500-listing plan.
+
 ## Open items and risks
 
+0a. **Plans PR: apply 0005, run `supabase/checks/live_plan_check.sql`, apply 0006 and 0007, set `CRON_SECRET` in Vercel, then merge.** Order and rollback in `docs/PLANS_IMPLEMENTATION_2026-09-28.md` section 3. The Supabase connector in cloud sessions must be authorised as cadenceoshylabs@gmail.com (org "Oshylabs") to do this; the "Oshylabs3" org cannot see the project.
 0. **Migration 0005 must be applied to `qjlwmpbmrdercymcnroz`** (SQL editor, or `supabase db push` from a machine logged in as the cadence account). Until it is, the holes above are open on live. Verify afterwards with `select tgname from pg_trigger where tgname like 'guard_%';` (expect 2 rows) and `select policyname from pg_policies where tablename='subscriptions';` (expect only owner read and admin).
 
 1. Listing pages are server rendered since PR #4 (25 Sep). If a listing ever shows "No properties yet" to curl, check `src/lib/listings.ts` and the anon key first.

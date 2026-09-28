@@ -50,11 +50,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (supabase) {
     const { data } = await supabase
       .from('properties')
-      .select('id, created_at')
+      .select('*')
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
       .limit(5000)
-    propertyRoutes = (data ?? []).map((p) => ({
+    // Demo listings are samples, never submitted to search engines.
+    propertyRoutes = ((data ?? []) as { id: string; created_at: string; is_demo?: boolean }[])
+      .filter((p) => p.is_demo !== true)
+      .map((p) => ({
       url: `${SITE_URL}/properties/${p.id}`,
       lastModified: new Date(p.created_at),
       changeFrequency: 'weekly',

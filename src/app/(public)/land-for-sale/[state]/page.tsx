@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ state: st
   if (!s) return {}
   const url = `${SITE_URL}/land-for-sale/${s.slug}`
   const title = `Land and property for sale in ${s.name} with title documents shown`
-  const description = `Browse land, houses and plots for sale in ${s.name}. Every listing states its title document and names the seller. Areas covered: ${areasForState(s.slug).map((a) => a.name).join(', ')}.`
+  const description = `Browse land, houses and plots for sale in ${s.name}. Listings show the title document the seller states, and name the seller. Areas covered: ${areasForState(s.slug).map((a) => a.name).join(', ')}.`
   return { title, description, alternates: { canonical: url }, openGraph: { title, description, url } }
 }
 

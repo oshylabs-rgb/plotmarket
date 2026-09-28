@@ -39,7 +39,7 @@ export const GUIDES: Guide[] = [
         heading: 'Why the paper matters more than the fence',
         paragraphs: [
           'Under the Land Use Act 1978 all land in a state is vested in the governor, who grants rights of occupancy to individuals and companies. In the Federal Capital Territory the Minister of the FCT plays that role. What a buyer purchases is therefore a right over the land, and the document is the evidence of that right.',
-          'Most land losses in Nigeria happen because money changes hands before anyone looks at the document. The seller shows a fence, a signboard and a survey beacon, and the buyer pays. On Plotmarket every listing states which document the seller holds, so the conversation starts with the paper.',
+          'Most land losses in Nigeria happen because money changes hands before anyone looks at the document. The seller shows a fence, a signboard and a survey beacon, and the buyer pays. On Plotmarket every listing asks the seller which document they hold, and shows their answer, so the conversation starts with the paper.',
         ],
       },
       {
@@ -264,7 +264,7 @@ export const GUIDES: Guide[] = [
       {
         question: 'Does Plotmarket handle payments or escrow?',
         answer:
-          'Not for land purchases. Plotmarket charges listers for listing plans through Paystack. Purchase payments happen between buyer and seller, ideally through a lawyer’s client account.',
+          'No. Plotmarket never takes, holds or protects money for a property. Paystack is used only for sellers’ plan fees. Purchase payments happen between buyer and seller, ideally through a lawyer’s client account after your own title search.',
       },
     ],
   },

@@ -30,6 +30,9 @@ trap cleanup EXIT
 
 PSQL=(psql -h "$WORK" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q -X)
 
+# Migrations print "does not exist, skipping" notices by design; only show
+# warnings and errors while applying them.
+export PGOPTIONS='-c client_min_messages=warning'
 "${PSQL[@]}" -f "$ROOT/supabase/tests/supabase_stub.sql"
 
 for migration in "$ROOT"/supabase/migrations/*.sql; do
@@ -45,6 +48,7 @@ for migration in "$ROOT"/supabase/migrations/*.sql; do
   esac
 done
 
+unset PGOPTIONS
 status=0
 for test in "$ROOT"/supabase/tests/*.test.sql; do
   echo "== $(basename "$test")"

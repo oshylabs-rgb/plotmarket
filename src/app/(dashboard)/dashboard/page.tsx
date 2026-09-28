@@ -3,18 +3,20 @@
 import { useEffect, useState } from 'react'
 import { Building2, MessageSquare, CreditCard, TrendingUp, Eye, Clock, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { formatNaira } from '@/lib/utils'
+import { formatNaira, getStatusColor } from '@/lib/utils'
 import { format } from 'date-fns'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import { OnboardingTour } from '@/components/OnboardingTour'
-import type { Property, Inquiry, Subscription } from '@/types/database'
+import { usePlanStatus } from '@/hooks/usePlanStatus'
+import { planName } from '@/constants/plans'
+import type { Property, Inquiry } from '@/types/database'
 
 export default function DashboardPage() {
   const { user, profile, loading: authLoading } = useAuth()
   const [properties, setProperties] = useState<Property[]>([])
   const [inquiries, setInquiries] = useState<Inquiry[]>([])
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const { status: plan } = usePlanStatus(user?.id)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export default function DashboardPage() {
     const fetchData = async () => {
       const supabase = createClient()
 
-      const [propertiesRes, inquiriesRes, subscriptionRes] = await Promise.all([
+      const [propertiesRes, inquiriesRes] = await Promise.all([
         supabase
           .from('properties')
           .select('*')
@@ -35,18 +37,10 @@ export default function DashboardPage() {
           .eq('receiver_id', user.id)
           .order('created_at', { ascending: false })
           .limit(5),
-        supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('status', 'active')
-          .order('created_at', { ascending: false })
-          .limit(1),
       ])
 
       setProperties(propertiesRes.data || [])
       setInquiries(inquiriesRes.data || [])
-      setSubscription(subscriptionRes.data?.[0] || null)
       setLoading(false)
     }
 
@@ -77,15 +71,19 @@ export default function DashboardPage() {
       href: '/dashboard/inquiries',
     },
     {
-      label: 'Subscription',
-      value: subscription ? subscription.plan.charAt(0).toUpperCase() + subscription.plan.slice(1) : 'Basic (Free)',
+      label: 'Plan',
+      value: plan ? planName(plan.plan) : '…',
       icon: CreditCard,
       color: 'bg-brand-gold-50 text-brand-gold-600',
       href: '/dashboard/subscription',
     },
     {
-      label: 'Active Listings',
-      value: properties.filter((p) => p.status === 'approved').length.toString(),
+      label: 'Active listings',
+      value: plan
+        ? plan.max_active === null
+          ? String(plan.active_count)
+          : `${plan.active_count} of ${plan.max_active}`
+        : '…',
       icon: Eye,
       color: 'bg-purple-50 text-purple-600',
       href: '/dashboard/listings',
@@ -145,13 +143,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-gray-500">{formatNaira(property.price)}</p>
                   </div>
                   <span
-                    className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${
-                      property.status === 'approved'
-                        ? 'bg-green-100 text-green-700'
-                        : property.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-700'
-                        : 'bg-red-100 text-red-700'
-                    }`}
+                    className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${getStatusColor(property.status)}`}
                   >
                     {property.status}
                   </span>
@@ -217,7 +209,7 @@ export default function DashboardPage() {
           </Link>
           <Link href="/dashboard/subscription" className="btn btn-secondary">
             <TrendingUp className="h-4 w-4" />
-            Upgrade Plan
+            Your plan
           </Link>
           <Link href="/dashboard/profile" className="btn btn-outline">
             Edit Profile

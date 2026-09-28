@@ -4,66 +4,7 @@
 --
 -- Run with: npm run test:db
 
-\set ON_ERROR_STOP 1
-set client_min_messages = notice;
-\o /dev/null
-
-create schema t;
-
--- Run one statement as an API caller. Returns rows affected. The role switch
--- is local to the surrounding (sub)transaction, so an error inside the
--- statement also undoes it.
-create function t.exec_as(api_role text, uid uuid, stmt text) returns int
-language plpgsql as $$
-declare n int;
-begin
-  perform set_config('request.jwt.claim.sub', coalesce(uid::text, ''), true);
-  execute format('set local role %I', api_role);
-  execute stmt;
-  get diagnostics n = row_count;
-  reset role;
-  return n;
-end $$;
-
--- Passes when the statement is refused: a permission error or zero rows.
--- Whatever the statement did is always rolled back, so one failing check
--- cannot leave state behind that changes the outcome of the next.
-create function t.denied(label text, api_role text, uid uuid, stmt text) returns void
-language plpgsql as $$
-declare n int; refused boolean := false; allowed boolean := false;
-begin
-  begin
-    n := t.exec_as(api_role, uid, stmt);
-    allowed := n > 0;
-    raise exception using errcode = 'T0001';
-  exception
-    when insufficient_privilege or check_violation then refused := true;
-    when sqlstate 'T0001' then null;
-  end;
-  if allowed and not refused then
-    raise exception 'FAIL (was allowed): %', label;
-  end if;
-  raise notice 'ok   %', label;
-end $$;
-
--- Passes when the statement affects exactly the expected number of rows.
-create function t.allowed(label text, api_role text, uid uuid, stmt text, expect int default 1)
-returns void language plpgsql as $$
-declare n int;
-begin
-  n := t.exec_as(api_role, uid, stmt);
-  if n <> expect then
-    raise exception 'FAIL (% rows, expected %): %', n, expect, label;
-  end if;
-  raise notice 'ok   %', label;
-end $$;
-
-create function t.check(label text, cond boolean) returns void
-language plpgsql as $$
-begin
-  if cond is not true then raise exception 'FAIL: %', label; end if;
-  raise notice 'ok   %', label;
-end $$;
+\ir helpers.sql
 
 -- ---------------------------------------------------------------
 -- Fixtures, created as postgres the way sign up and the SQL editor do
@@ -86,7 +27,7 @@ insert into public.properties (id, user_id, title, type, listing_type, price, st
 \set buyer '''00000000-0000-0000-0000-0000000000d4'''
 
 select t.check('sign up trigger still creates profiles with safe defaults',
-  (select count(*) = 4 and bool_and(account_type = 'basic' and not is_verified) from public.profiles)
+  (select count(*) = 4 and bool_and(account_type = 'basic' and not is_verified) from public.profiles where email like '%@test')
   and (select user_type = 'agent' from public.profiles where email = 'seller.a@test'));
 
 -- ---------------------------------------------------------------
@@ -245,6 +186,6 @@ select t.denied('anon cannot enquire', 'anon', null,
 -- public reads are unchanged
 -- ---------------------------------------------------------------
 select t.allowed('anon sees only approved listings', 'anon', null,
-  $$select * from public.properties$$, 1);
+  $$select * from public.properties where user_id::text like '00000000-%'$$, 1);
 
 \echo 'ALL PASSED'

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, User, Phone, UserPlus, CheckCircle, Building2, Briefcase, FileText } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
@@ -41,14 +42,30 @@ const USER_TYPES: {
   },
 ]
 
+const PLAN_NOTES: Record<string, string> = {
+  pilot:
+    'Founding Developer Pilot: register as a developer with your CAC number, then request the pilot from your Plan page. Every request is approved by hand. No card or automatic charge.',
+  business:
+    'Business: create your account first, then choose Business on your Plan page. ₦35,000 per 30 days through Paystack, with no automatic renewal.',
+}
+
 export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterForm />
+    </Suspense>
+  )
+}
+
+function RegisterForm() {
+  const planIntent = useSearchParams().get('plan') ?? ''
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [companyName, setCompanyName] = useState('')
   const [cacNumber, setCacNumber] = useState('')
-  const [userType, setUserType] = useState<UserType>('individual')
+  const [userType, setUserType] = useState<UserType>(planIntent === 'pilot' ? 'developer' : 'individual')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -143,8 +160,13 @@ export default function RegisterPage() {
           </div>
           <h1 className="mt-6 text-2xl font-bold text-gray-900">Create your account</h1>
           <p className="mt-2 text-sm text-gray-500">
-            Join Plotmarket and start listing your properties
+            Join Plotmarket and list up to 3 properties free
           </p>
+          {PLAN_NOTES[planIntent] && (
+            <p className="mx-auto mt-4 max-w-xl rounded-lg bg-brand-cream-50 px-4 py-3 text-left text-sm text-gray-700">
+              {PLAN_NOTES[planIntent]}
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">

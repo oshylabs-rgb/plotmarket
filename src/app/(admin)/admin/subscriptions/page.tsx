@@ -64,7 +64,7 @@ export default function AdminSubscriptionsPage() {
         <div className="rounded-xl border border-brand-cream-300 bg-white p-5 shadow-sm">
           <div className="flex items-center gap-2 text-brand-gold-600">
             <CreditCard className="h-5 w-5" />
-            <span className="text-sm font-medium">Monthly Revenue</span>
+            <span className="text-sm font-medium">Value of active paid periods</span>
           </div>
           <p className="mt-2 text-2xl font-bold text-gray-900">
             {formatNaira(activeSubs.reduce((sum, s) => sum + s.amount, 0))}

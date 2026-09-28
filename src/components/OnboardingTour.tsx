@@ -12,13 +12,13 @@ const TOUR_STEPS = [
   },
   {
     title: 'Your Dashboard Overview',
-    description: 'Your key numbers at a glance: total listings, inquiries received, subscription status and active listings.',
+    description: 'Your key numbers at a glance: listings, enquiries received, your plan and how many active listings it allows. Free Starter lets you list up to 3 properties free.',
     icon: Building2,
     target: 'tour-stats',
   },
   {
     title: 'Your Property Listings',
-    description: 'This section shows your recent listings. You can view their status (pending, approved, rejected) and manage them from the My Listings page.',
+    description: 'Your recent listings and their status. Pending means waiting for review. Approved means live. Paused means hidden from buyers but kept. Manage them from My Listings.',
     icon: Search,
     target: 'tour-listings',
   },
@@ -30,13 +30,13 @@ const TOUR_STEPS = [
   },
   {
     title: 'Quick Actions',
-    description: 'Use these shortcuts to add a new property, upgrade your subscription plan, or edit your profile.',
+    description: 'Use these shortcuts to add a property, see your plan, or edit your profile.',
     icon: Plus,
     target: 'tour-actions',
   },
   {
     title: 'Add Your First Property',
-    description: 'Click "Add New Property" to create your first listing. Fill in the title, description, price, location, title document and photos, then submit it for review.',
+    description: 'Click "Add New Property" to create your first listing. Fill in the title, description, price, location, title document and photos, then submit it. We review every listing before it goes live; that review is not a check of ownership or title.',
     icon: Building2,
     target: null,
   },

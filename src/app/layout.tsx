@@ -29,11 +29,11 @@ export const metadata: Metadata = {
     template: '%s | Plotmarket',
   },
   description:
-    'Browse houses, apartments, land and commercial property across Nigeria. Every listing states its title document and the person selling it.',
+    'Browse houses, apartments, land and commercial property across Nigeria. Listings show the title document the seller states, and who is selling.',
   openGraph: {
     title: 'Plotmarket, Nigerian property and land listings',
     description:
-      'Every listing states its title document and the person selling it. Inspect in 360 degrees before you travel.',
+      'Listings show the title document the seller states, and who is selling. Inspect in 360 degrees where the seller has added it.',
     url: 'https://plotmarket.ng',
     siteName: 'Plotmarket',
     locale: 'en_NG',
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Plotmarket, Nigerian property and land listings',
     description:
-      'Every listing states its title document and the person selling it. Inspect in 360 degrees before you travel.',
+      'Listings show the title document the seller states, and who is selling. Inspect in 360 degrees where the seller has added it.',
   },
   alternates: { canonical: 'https://plotmarket.ng' },
   robots: { index: true, follow: true },
@@ -59,7 +59,7 @@ const ORGANIZATION_JSON_LD = {
   email: 'arnold.oshenye@oshylabs.eu',
   areaServed: 'NG',
   description:
-    'Nigerian land and property marketplace where every listing states its title document and names the seller.',
+    'Nigerian land and property marketplace where listings show the seller stated title document and name the seller.',
 }
 
 const WEBSITE_JSON_LD = {

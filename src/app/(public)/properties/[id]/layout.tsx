@@ -23,6 +23,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!p) {
     return { title: 'Listing', robots: { index: false, follow: true } }
   }
+  if (p.is_demo) {
+    // A sample, not inventory: keep it out of search results.
+    return { title: `${p.title} (demo listing, not for sale)`, robots: { index: false, follow: true } }
+  }
   const url = `${SITE_URL}/properties/${p.id}`
   const titleDoc = TITLE_DOCUMENT_LABELS[p.title_document] ?? 'Title not stated'
   const where = [p.city, p.state].filter(Boolean).join(', ')
@@ -51,14 +55,15 @@ export default async function PropertyLayout({
 }) {
   const { id } = await params
   const p = await getApprovedProperty(id)
-  const jsonLd = p
+  // No RealEstateListing markup for demo listings: they are not for sale.
+  const jsonLd = p && !p.is_demo
     ? {
         '@context': 'https://schema.org',
         '@type': 'RealEstateListing',
         name: p.title,
         url: `${SITE_URL}/properties/${p.id}`,
         description: p.description ?? undefined,
-        datePosted: p.created_at,
+        datePosted: p.published_at ?? p.created_at,
         image: p.images?.length ? p.images : undefined,
         offers: {
           '@type': 'Offer',

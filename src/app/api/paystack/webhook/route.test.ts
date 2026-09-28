@@ -7,14 +7,30 @@ import { NextRequest } from 'next/server'
 type Row = Record<string, unknown>
 const db: { subscriptions: Row[]; profiles: Row[] } = { subscriptions: [], profiles: [] }
 
+const rpcCalls: { fn: string; args: unknown }[] = []
+let failProfileUpdateOnce = false
+
 function table(name: keyof typeof db) {
-  const filters: [string, unknown][] = []
+  const filters: ((r: Row) => boolean)[] = []
   let pendingUpdate: Row | null = null
-  const matches = () => db[name].filter((r) => filters.every(([k, v]) => r[k] === v))
+  let sortKey: string | null = null
+  const matches = () => {
+    const rows = db[name].filter((r) => filters.every((f) => f(r)))
+    if (sortKey) rows.sort((a, b) => String(b[sortKey!]).localeCompare(String(a[sortKey!])))
+    return rows
+  }
   const builder = {
     select: () => builder,
     eq: (k: string, v: unknown) => {
-      filters.push([k, v])
+      filters.push((r) => r[k] === v)
+      return builder
+    },
+    gt: (k: string, v: string) => {
+      filters.push((r) => String(r[k]) > v)
+      return builder
+    },
+    order: (k: string) => {
+      sortKey = k
       return builder
     },
     limit: async () => ({ data: matches(), error: null }),
@@ -30,7 +46,11 @@ function table(name: keyof typeof db) {
       pendingUpdate = patch
       return builder
     },
-    then: (resolve: (v: { error: null }) => void) => {
+    then: (resolve: (v: { error: unknown }) => void) => {
+      if (name === 'profiles' && pendingUpdate && failProfileUpdateOnce) {
+        failProfileUpdateOnce = false
+        return resolve({ error: { message: 'temporary failure' } })
+      }
       if (pendingUpdate) for (const r of matches()) Object.assign(r, pendingUpdate)
       resolve({ error: null })
     },
@@ -39,7 +59,13 @@ function table(name: keyof typeof db) {
 }
 
 vi.mock('@/lib/supabase/admin', () => ({
-  createAdminClient: () => ({ from: (name: keyof typeof db) => table(name) }),
+  createAdminClient: () => ({
+    from: (name: keyof typeof db) => table(name),
+    rpc: async (fn: string, args: unknown) => {
+      rpcCalls.push({ fn, args })
+      return { error: null }
+    },
+  }),
 }))
 
 const SECRET = 'sk_test_webhook'
@@ -72,6 +98,8 @@ function charge(overrides: Record<string, unknown> = {}) {
 }
 
 beforeEach(() => {
+  rpcCalls.length = 0
+  failProfileUpdateOnce = false
   db.subscriptions = []
   db.profiles = [{ id: 'user-1', account_type: 'basic' }]
 })
@@ -118,5 +146,40 @@ describe('Paystack webhook charge.success', () => {
     const retry = await POST(signedRequest(charge()))
     expect(retry.status).toBe(200)
     expect(db.subscriptions).toHaveLength(1)
+  })
+
+  it('rebalances the seller listings after granting, so paused listings come back', async () => {
+    await POST(signedRequest(charge()))
+    expect(rpcCalls).toEqual([{ fn: 'apply_allowance', args: { p_user: 'user-1' } }])
+  })
+
+  it('finishes the grant on retry when a later step failed the first time', async () => {
+    failProfileUpdateOnce = true
+    const first = await POST(signedRequest(charge()))
+    expect(first.status).toBe(500) // Paystack will retry
+    expect(db.subscriptions).toHaveLength(1)
+    expect(db.profiles[0].account_type).toBe('basic')
+
+    const retry = await POST(signedRequest(charge()))
+    expect(retry.status).toBe(200)
+    expect(db.subscriptions).toHaveLength(1)
+    expect(db.profiles[0].account_type).toBe('professional')
+    expect(rpcCalls).toHaveLength(1)
+  })
+
+  it('paying while a period is running extends from its end instead of overlapping', async () => {
+    const runningEnd = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+    db.subscriptions.push({
+      user_id: 'user-1',
+      plan: 'professional',
+      status: 'active',
+      end_date: runningEnd,
+      paystack_reference: 'ref_0',
+    })
+    await POST(signedRequest(charge()))
+    const added = db.subscriptions.find((s) => s.paystack_reference === 'ref_1')!
+    expect(added.start_date).toBe(runningEnd)
+    const days = (Date.parse(added.end_date as string) - Date.parse(runningEnd)) / 86400000
+    expect(days).toBe(30)
   })
 })

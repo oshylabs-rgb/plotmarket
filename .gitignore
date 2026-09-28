@@ -47,3 +47,7 @@ supabase/.env*
 
 # local handoff notes, may contain credentials
 HANDOFF.md
+
+# playwright
+/test-results/
+/playwright-report/

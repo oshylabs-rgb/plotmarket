@@ -23,7 +23,7 @@ const SIDEBAR_LINKS = [
   { href: '/dashboard/listings', label: 'My Listings', icon: Building2 },
   { href: '/dashboard/listings/new', label: 'Add Property', icon: Plus },
   { href: '/dashboard/inquiries', label: 'Inquiries', icon: MessageSquare },
-  { href: '/dashboard/subscription', label: 'Subscription', icon: CreditCard },
+  { href: '/dashboard/subscription', label: 'Plan', icon: CreditCard },
   { href: '/dashboard/profile', label: 'Profile', icon: UserCircle },
 ]
 

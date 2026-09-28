@@ -3,16 +3,15 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Search, Building2, MapPin, ArrowRight, ScrollText, ShieldCheck, Lock, Rotate3d, PhoneCall } from 'lucide-react'
+import { Search, Building2, MapPin, ArrowRight, ScrollText, ShieldCheck, Rotate3d, PhoneCall } from 'lucide-react'
 import { PropertyCard } from '@/components/PropertyCard'
-import { formatNaira } from '@/lib/utils'
-import { PRICING_PLANS } from '@/constants/pricing'
+import { PUBLIC_PLANS } from '@/constants/plans'
 import type { Property } from '@/types/database'
 
 const TRUST_BAR = [
-  { label: 'Every listing reviewed before it goes live', icon: ShieldCheck },
-  { label: 'Title documents named on every listing', icon: ScrollText },
-  { label: 'Payments secured by Paystack', icon: Lock },
+  { label: 'Every listing reviewed before it goes live. Not a title check.', icon: ShieldCheck },
+  { label: 'Title-document type stated by the seller', icon: ScrollText },
+  { label: 'Talk to the seller directly', icon: PhoneCall },
   { label: 'All 36 states and the FCT', icon: MapPin },
 ]
 
@@ -21,7 +20,7 @@ const FEATURES = [
     icon: ScrollText,
     title: 'See the paperwork first',
     description:
-      'Sellers state the title on offer, C of O, Governor’s Consent, Deed of Assignment or Excision, before you ever pick up the phone.',
+      'Sellers state the title they say they hold, C of O, Governor’s Consent, Deed of Assignment or Excision, before you ever pick up the phone. Plotmarket does not verify it; check it at the land registry.',
   },
   {
     icon: Rotate3d,
@@ -33,7 +32,7 @@ const FEATURES = [
     icon: PhoneCall,
     title: 'Talk to the owner directly',
     description:
-      'Every listing carries the lister’s name, type and phone number. No middlemen inserted between you and the person selling.',
+      'Every listing shows the lister’s name and whether they are an owner, agent or developer, with their phone number where given. No middlemen inserted between you and the person selling.',
   },
 ]
 
@@ -76,7 +75,7 @@ export function HomePage({ featuredProperties }: { featuredProperties: Property[
               <span className="text-brand-gold-400">with the papers shown</span>
             </h1>
             <p className="mt-5 text-lg text-brand-green-100 sm:text-xl">
-              Every listing names its title document and the person selling it. Inspect in 360° before you travel.
+              Every listing shows the title document the seller says they hold, and who is selling. Inspect in 360° where the seller has added it.
             </p>
 
             {/* Search Bar */}
@@ -140,8 +139,8 @@ export function HomePage({ featuredProperties }: { featuredProperties: Property[
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
         <div className="flex items-end justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Featured Properties</h2>
-            <p className="mt-2 text-gray-500">Hand-picked properties for you</p>
+            <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Latest listings</h2>
+            <p className="mt-2 text-gray-500">Newest approved listings, featured first</p>
           </div>
           <Link
             href="/properties"
@@ -207,35 +206,22 @@ export function HomePage({ featuredProperties }: { featuredProperties: Property[
           <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Simple, Transparent Pricing</h2>
           <p className="mt-2 text-gray-500">Start listing for free. Upgrade as you grow.</p>
         </div>
-        <div className="mt-8 flex flex-wrap items-stretch justify-center gap-4">
-          {PRICING_PLANS.filter((plan) =>
-            ['free', 'professional', 'enterprise'].includes(plan.planId)
-          ).map((plan) => (
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          {PUBLIC_PLANS.map((plan) => (
             <div
-              key={plan.planId}
-              className={`rounded-xl bg-white px-6 py-4 text-center ${
-                plan.highlighted
-                  ? 'border-2 border-brand-gold-400 shadow-md'
-                  : 'border border-brand-cream-300'
+              key={plan.key}
+              className={`rounded-xl bg-white px-6 py-5 text-center ${
+                plan.highlighted ? 'border-2 border-brand-gold-400 shadow-md' : 'border border-brand-cream-300'
               }`}
             >
-              <p
-                className={`text-sm font-medium ${
-                  plan.highlighted ? 'text-brand-gold-600' : 'text-gray-500'
-                }`}
-              >
-                {plan.highlighted ? 'Most Popular' : plan.name}
-              </p>
-              <p className="mt-1 text-3xl font-bold text-brand-green-700">
-                {plan.price === 0 ? (plan.planId === 'free' ? 'Free' : 'Custom') : formatNaira(plan.price)}
-              </p>
-              <p className="text-sm text-gray-400">
-                {plan.listings === -1 ? 'Unlimited listings' : `${plan.listings} listings`}
-                {plan.period === '/month' ? '/month' : ''}
-              </p>
+              <p className="text-sm font-medium text-gray-600">{plan.name}</p>
+              <p className="mt-1 text-3xl font-bold text-brand-green-700">{plan.priceLabel}</p>
+              {plan.periodLabel && <p className="text-sm text-gray-500">{plan.periodLabel}</p>}
+              <p className="mt-2 text-sm text-gray-600">{plan.summary}</p>
             </div>
           ))}
         </div>
+
         <div className="mt-6 text-center">
           <Link href="/pricing" className="btn btn-outline">
             View All Plans
@@ -250,7 +236,7 @@ export function HomePage({ featuredProperties }: { featuredProperties: Property[
             Selling land or property?
           </h2>
           <p className="mt-4 text-lg text-ink-200">
-            List free, name your title document, add 360° photos and a video walkthrough. Serious buyers reach you directly.
+            List up to 3 properties free. State your title document, add photos, a video walkthrough or 360° photos. Buyers who are interested contact you directly.
           </p>
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <Link

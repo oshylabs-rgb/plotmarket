@@ -1,13 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save, AlertCircle, CheckCircle, Loader2, ArrowUpCircle } from 'lucide-react'
 import Link from 'next/link'
 import { NIGERIAN_STATES } from '@/constants/states'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
-import { getListingLimit } from '@/constants/pricing'
+import { friendlyListingError, planName } from '@/constants/plans'
+import { usePlanStatus } from '@/hooks/usePlanStatus'
 import { MediaUpload, type MediaUploadResult } from '@/components/MediaUpload'
 import { TITLE_DOCUMENT_LABELS, type TitleDocumentType } from '@/types/database'
 
@@ -17,7 +18,7 @@ const TITLE_DOCUMENTS = Object.keys(TITLE_DOCUMENT_LABELS) as TitleDocumentType[
 
 export default function NewListingPage() {
   const router = useRouter()
-  const { user, profile, loading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -29,13 +30,6 @@ export default function NewListingPage() {
     videos360: [],
   })
   const [mediaBusy, setMediaBusy] = useState(false)
-  const [limitCheck, setLimitCheck] = useState<{
-    checking: boolean
-    atLimit: boolean
-    current: number
-    max: number
-  }>({ checking: true, atLimit: false, current: 0, max: 3 })
-
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -52,37 +46,10 @@ export default function NewListingPage() {
     title_document: 'unknown',
   })
 
-  // Check listing limits
-  useEffect(() => {
-    if (!user || !profile) return
-
-    const checkListingLimit = async () => {
-      const supabase = createClient()
-
-      // Get user's current property count
-      const { count } = await supabase
-        .from('properties')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-
-      // Determine plan — map 'basic' account_type to 'free' planId
-      const planId = profile.account_type === 'basic' ? 'free' : profile.account_type
-      const maxListings = getListingLimit(planId)
-
-      const currentCount = count ?? 0
-      // -1 means unlimited
-      const atLimit = maxListings !== -1 && currentCount >= maxListings
-
-      setLimitCheck({
-        checking: false,
-        atLimit,
-        current: currentCount,
-        max: maxListings,
-      })
-    }
-
-    checkListingLimit()
-  }, [user, profile])
+  // The server enforces the allowance; this only decides what to show.
+  const { status: plan, loading: planLoading } = usePlanStatus(user?.id)
+  const atLimit = !!plan && plan.max_active !== null && plan.active_count >= plan.max_active
+  const isPilot = plan?.plan === 'pilot'
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
@@ -112,13 +79,14 @@ export default function NewListingPage() {
 
     const { error: insertError } = await supabase.from('properties').insert({
       user_id: user.id,
+      estate_name: isPilot ? plan?.pilot_project_name : null,
       title: form.title,
       description: form.description,
       type: form.type,
       listing_type: form.listing_type,
       price: parseInt(form.price),
       location: form.location || null,
-      state: form.state,
+      state: isPilot && plan?.pilot_project_state ? plan.pilot_project_state : form.state,
       city: form.city || null,
       bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
       bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
@@ -132,7 +100,7 @@ export default function NewListingPage() {
     })
 
     if (insertError) {
-      setError(insertError.message)
+      setError(friendlyListingError(insertError.message))
       setLoading(false)
     } else {
       setSuccess(true)
@@ -142,7 +110,7 @@ export default function NewListingPage() {
     }
   }
 
-  if (authLoading || limitCheck.checking) {
+  if (authLoading || planLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-brand-green-600" />
@@ -151,7 +119,7 @@ export default function NewListingPage() {
   }
 
   // Show upgrade prompt if at listing limit
-  if (limitCheck.atLimit) {
+  if (atLimit && plan) {
     return (
       <div>
         <Link
@@ -165,17 +133,22 @@ export default function NewListingPage() {
         <div className="mx-auto max-w-lg text-center">
           <div className="rounded-xl border-2 border-brand-gold-400 bg-brand-cream-50 p-8">
             <ArrowUpCircle className="mx-auto h-12 w-12 text-brand-gold-500" />
-            <h2 className="mt-4 text-xl font-bold text-gray-900">Listing Limit Reached</h2>
+            <h2 className="mt-4 text-xl font-bold text-gray-900">All your active listing slots are in use</h2>
             <p className="mt-2 text-gray-600">
-              You&apos;ve used {limitCheck.current} of {limitCheck.max} listings available on your
-              current plan.
+              {planName(plan.plan)} allows {plan.max_active} active listings and you have{' '}
+              {plan.active_count}.
             </p>
             <p className="mt-1 text-sm text-gray-500">
-              Upgrade your plan to add more property listings.
+              Pause or mark sold a listing you no longer need, or see what a bigger plan allows.
             </p>
-            <Link href="/dashboard/subscription" className="btn btn-primary mt-6 inline-block">
-              Upgrade Plan
-            </Link>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <Link href="/dashboard/listings" className="btn btn-outline">
+                Manage listings
+              </Link>
+              <Link href="/dashboard/subscription" className="btn btn-primary">
+                See plans
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -187,7 +160,9 @@ export default function NewListingPage() {
       <div className="flex h-64 flex-col items-center justify-center">
         <CheckCircle className="h-12 w-12 text-brand-green-500" />
         <h2 className="mt-4 text-xl font-bold text-gray-900">Property Listed!</h2>
-        <p className="mt-1 text-gray-500">Your property has been submitted for review.</p>
+        <p className="mt-1 text-gray-500">
+          Submitted for review. We check listings before they go live; that is not a check of ownership or title.
+        </p>
         <p className="mt-1 text-sm text-gray-400">Redirecting to your listings...</p>
       </div>
     )
@@ -206,9 +181,9 @@ export default function NewListingPage() {
       <h1 className="text-2xl font-bold text-gray-900">Add New Property</h1>
       <p className="mt-1 text-gray-500">
         Fill in the details to list your property
-        {limitCheck.max !== -1 && (
+        {plan && plan.max_active !== null && (
           <span className="ml-2 text-xs text-gray-400">
-            ({limitCheck.current}/{limitCheck.max} listings used)
+            ({plan.active_count} of {plan.max_active} active listings used)
           </span>
         )}
       </p>
@@ -321,8 +296,9 @@ export default function NewListingPage() {
               ))}
             </select>
             <p className="mt-2 text-xs text-gray-500">
-              State only what you genuinely hold. Plotmarket does not verify title documents, and
-              knowingly misstating one can expose you to liability under the Land Use Act.
+              Buyers see this as the title-document type stated by you. State only what you genuinely
+              hold. Plotmarket does not verify title documents, and knowingly misstating one can expose
+              you to liability under the Land Use Act.
             </p>
           </div>
         </div>
@@ -330,15 +306,24 @@ export default function NewListingPage() {
         {/* Location */}
         <div className="rounded-xl border border-brand-cream-300 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-gray-900">Location</h2>
+          {isPilot && (
+            <p className="mt-1 text-sm text-gray-500">
+              Founding Developer Pilot listings go in your nominated estate, {plan?.pilot_project_name}.
+            </p>
+          )}
           <div className="mt-4 grid gap-4 sm:grid-cols-3">
             <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">State</label>
-              <select name="state" value={form.state} onChange={handleChange} className="input-field" required>
-                <option value="">Select State</option>
-                {NIGERIAN_STATES.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+              <label htmlFor="state" className="mb-1 block text-sm font-medium text-gray-700">State</label>
+              {isPilot && plan?.pilot_project_state ? (
+                <input id="state" value={plan.pilot_project_state} readOnly className="input-field bg-brand-cream-50" />
+              ) : (
+                <select id="state" name="state" value={form.state} onChange={handleChange} className="input-field" required>
+                  <option value="">Select State</option>
+                  {NIGERIAN_STATES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              )}
             </div>
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">City</label>

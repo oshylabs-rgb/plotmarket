@@ -109,7 +109,7 @@ export default function AdminDashboardPage() {
       color: 'bg-blue-50 text-blue-600',
     },
     {
-      label: 'Revenue',
+      label: 'Active paid periods (value)',
       value: stats.totalRevenue > 0 ? formatNaira(stats.totalRevenue) : '₦0',
       icon: CreditCard,
       color: 'bg-brand-gold-50 text-brand-gold-600',

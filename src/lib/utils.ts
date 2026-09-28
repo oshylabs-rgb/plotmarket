@@ -34,6 +34,7 @@ export function getStatusColor(status: string): string {
       return 'bg-brand-green-50 text-brand-green-700 border border-brand-green-200'
     case 'pending':
     case 'unread':
+    case 'requested':
       return 'bg-brand-gold-50 text-brand-gold-700 border border-brand-gold-200'
     case 'rejected':
     case 'cancelled':
