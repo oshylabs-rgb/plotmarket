@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Source_Serif_4, Public_Sans } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { CookieConsent } from '@/components/CookieConsent'
 
@@ -7,19 +7,30 @@ import { CookieConsent } from '@/components/CookieConsent'
  * Self-hosted through next/font rather than a third-party stylesheet: one less
  * blocking round trip, which matters on Nigerian mobile connections.
  * Serif display over grotesque body is the "Registry" direction.
+ *
+ * The font files live in the repo (./fonts, latin subset from Fontsource, SIL
+ * OFL) instead of next/font/google, which downloads them from Google at build
+ * time; that download failing broke production builds.
  */
-const display = Source_Serif_4({
-  subsets: ['latin'],
-  weight: ['600', '700'],
+const display = localFont({
+  src: [
+    { path: './fonts/source-serif-4-latin-600-normal.woff2', weight: '600', style: 'normal' },
+    { path: './fonts/source-serif-4-latin-700-normal.woff2', weight: '700', style: 'normal' },
+  ],
   variable: '--font-display',
   display: 'swap',
+  fallback: ['Georgia', 'serif'],
 })
 
-const body = Public_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
+const body = localFont({
+  src: [
+    { path: './fonts/public-sans-latin-400-normal.woff2', weight: '400', style: 'normal' },
+    { path: './fonts/public-sans-latin-500-normal.woff2', weight: '500', style: 'normal' },
+    { path: './fonts/public-sans-latin-600-normal.woff2', weight: '600', style: 'normal' },
+  ],
   variable: '--font-body',
   display: 'swap',
+  fallback: ['system-ui', 'sans-serif'],
 })
 
 export const metadata: Metadata = {
