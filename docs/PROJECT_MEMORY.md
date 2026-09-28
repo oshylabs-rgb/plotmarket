@@ -75,7 +75,7 @@ Free Starter 3 active listings; Founding Developer Pilot 20 in one estate for 30
 
 ## Open items and risks
 
-0a. **Plans PR: apply 0005, run `supabase/checks/live_plan_check.sql`, apply 0006 and 0007, set `CRON_SECRET` in Vercel, then merge.** Order and rollback in `docs/PLANS_IMPLEMENTATION_2026-09-28.md` section 3. The Supabase connector in cloud sessions must be authorised as cadenceoshylabs@gmail.com (org "Oshylabs") to do this; the "Oshylabs3" org cannot see the project.
+0a. **Plans PR: apply 0005, run `supabase/checks/live_plan_check.sql`, apply 0006 and 0007, then merge.** (`CRON_SECRET` optional.) Order and rollback in `docs/PLANS_IMPLEMENTATION_2026-09-28.md` section 3. The Supabase connector in cloud sessions must be authorised with the Supabase login that owns org "Oshylabs" (Arnold, 28 Sep: cadencebyoshy@gmail.com, signed in on the Olabs browser; older notes say cadenceoshylabs@gmail.com). The "Oshylabs3" org cannot see the project.
 0. **Migration 0005 must be applied to `qjlwmpbmrdercymcnroz`** (SQL editor, or `supabase db push` from a machine logged in as the cadence account). Until it is, the holes above are open on live. Verify afterwards with `select tgname from pg_trigger where tgname like 'guard_%';` (expect 2 rows) and `select policyname from pg_policies where tablename='subscriptions';` (expect only owner read and admin).
 
 1. Listing pages are server rendered since PR #4 (25 Sep). If a listing ever shows "No properties yet" to curl, check `src/lib/listings.ts` and the anon key first.

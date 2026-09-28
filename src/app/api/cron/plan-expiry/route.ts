@@ -21,14 +21,16 @@ function watDate(iso: string): string {
 /**
  * Daily, from Vercel Cron (vercel.json). The database also runs the same
  * expiry every 15 minutes through pg_cron where available; this is the
- * fallback and the only place reminder emails are sent. Safe to run twice.
+ * fallback and the only place reminder emails are sent.
+ *
+ * Everything here is idempotent and only does what is already due: expiry
+ * that pg_cron would do anyway, and at most one reminder per pilot, claimed
+ * atomically before sending. So when CRON_SECRET is not set the route still
+ * runs; when it is set (Vercel then sends it), other callers are refused.
  */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET
-  if (!secret) {
-    return NextResponse.json({ error: 'CRON_SECRET is not configured' }, { status: 503 })
-  }
-  if (request.headers.get('authorization') !== `Bearer ${secret}`) {
+  if (secret && request.headers.get('authorization') !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -62,6 +64,20 @@ export async function GET(request: NextRequest) {
     profile: { email: string; full_name: string | null } | null
   }[]) {
     if (!pilot.profile?.email) continue
+
+    // Claim the reminder first, so two overlapping runs cannot both send it.
+    const { data: claimed, error: claimError } = await supabase
+      .from('pilots')
+      .update({ expiry_warning_sent_at: now.toISOString() })
+      .eq('id', pilot.id)
+      .is('expiry_warning_sent_at', null)
+      .select('id')
+    if (claimError) {
+      console.error('plan-expiry: could not claim reminder', pilot.id, claimError)
+      continue
+    }
+    if (!claimed || claimed.length === 0) continue
+
     const when = watDate(pilot.ends_at)
     const sent = await sendEmail({
       to: pilot.profile.email,
@@ -80,13 +96,16 @@ export async function GET(request: NextRequest) {
         'Plotmarket',
       ].join('\n'),
     })
-    if (!sent) continue
-    const { error: markError } = await supabase
+    if (sent) {
+      warned += 1
+      continue
+    }
+    // Release the claim so tomorrow's run tries again.
+    const { error: releaseError } = await supabase
       .from('pilots')
-      .update({ expiry_warning_sent_at: now.toISOString() })
+      .update({ expiry_warning_sent_at: null })
       .eq('id', pilot.id)
-    if (markError) console.error('plan-expiry: could not mark reminder sent', pilot.id, markError)
-    else warned += 1
+    if (releaseError) console.error('plan-expiry: could not release reminder claim', pilot.id, releaseError)
   }
 
   return NextResponse.json({ expired: (expired as unknown[] | null)?.length ?? 0, warned })
