@@ -44,6 +44,8 @@ describe('pilot brochure', () => {
   })
 
   it('carries the right contact details', () => {
+    // The number in the brochure and in every email is Mr Desmond Oshenye's.
+    expect(visibleText).toContain('Mr Desmond Oshenye')
     expect(html).toContain('tel:+2348032179317')
     expect(html).toContain('mailto:arnold.oshenye@oshylabs.eu')
     expect(html).toContain('https://plotmarket.ng/register?plan=pilot')

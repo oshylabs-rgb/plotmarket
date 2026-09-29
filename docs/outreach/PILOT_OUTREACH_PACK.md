@@ -2,7 +2,7 @@
 
 Version 1, 28 Sep 2026. Replaces the 4 Sep 2026 pack (Google Doc "Untitled document", personal Drive, id `1YTe76qkDYKiTcr7iaQLlJcQjL8jKqWy4oNmDZ3NEYpc`) which offered "Business free for 90 days, 500 listings, ₦80,000 a month". That offer is retired. Do not send anything from the old doc.
 
-Sender: Arnold Oshenye, `arnold.oshenye@oshylabs.eu`, +234 803 217 9317.
+Sender: Arnold Oshenye, `arnold.oshenye@oshylabs.eu`. Nigerian contact for every developer: Mr Desmond Oshenye (Arnold's father), +234 803 217 9317. Emails go from Arnold's mailbox and send the reader to Mr Oshenye by name and phone; the brochure says the same.
 Copy in the boxes below is ready to send. It has no hyphens or dashes on purpose; keep it that way when editing.
 
 ---
@@ -80,21 +80,20 @@ Hi {first_name},
 
 I run Plotmarket (plotmarket.ng), a property listing site for Nigeria. I'm picking a few developers to list one estate free for 30 days, and {company} is the kind of developer I want on it.
 
-You get up to 20 active listings with photos, video and 360 tours, and one setup session with me to get them live. Buyers see your name and number and contact you directly. It costs you nothing, and Plotmarket never takes or holds any payment for a property.
+You get up to 20 active listings with photos, video and 360 tours, and a setup session with our team to get them live. Buyers see your name and number and contact you directly. It costs you nothing, and Plotmarket never takes or holds any payment for a property.
 
 We're new. You would be one of the first developers on the site.
 
 After 30 days nothing is deleted or charged. Three listings stay up free and the rest pause until you decide.
 
-The two page brochure: https://plotmarket.ng/brochures/plotmarket-developer-pilot.pdf
-To ask for the pilot: {register_link}
+To take this further, please call my father, Mr Desmond Oshenye, on +234 803 217 9317. He is helping me with Plotmarket in Nigeria and will answer your questions and help you request the pilot.
 
-Worth 15 minutes this week?
+The two page brochure: https://plotmarket.ng/brochures/plotmarket-developer-pilot.pdf
+Or request the pilot yourself: {register_link}
 
 Arnold Oshenye
 Plotmarket, Oshylabs Ltd
-+234 803 217 9317
-plotmarket.ng
+In Nigeria: Mr Desmond Oshenye, +234 803 217 9317
 
 Reply no and I won't email again.
 ```
@@ -212,3 +211,11 @@ Developer with an estate: use section 6 but open with "You signed up to Plotmark
 ## 14. Voice check
 
 Drafted and passed through the arnold-voice rules on 28 Sep 2026 (baseline rules; the voice memory file was not reachable from the build session). DM and LinkedIn are an unsampled register for Arnold's voice, so treat those two as closest guess and correct them freely. Corrections go to the voice memory so the next pack is closer.
+
+## 15. Send log
+
+One line per batch. Names and addresses stay in the Zoho Sent folder, not in git.
+
+| Date | Batch | Sent | Source | Notes |
+|---|---|---|---|---|
+| 29 Sep 2026, 10:00 Stockholm | Developer email 1, brochure linked | 7 of a planned 20: Harmony Gardens and Estate Development, Periwinkle Residences, Landmark Africa, Comfort Homes and Properties, Edala Development, Tribitat Real Estate, Away Homes Group | Vibe Prospecting dataset `ds-97c99d1c-4f2b-4556-bbdc-fc8489b767a7`, professional emails with status valid, decision makers at developers only | Only 8 of 50 rows passed the rules (20 had no valid email, 21 were not developers). The 8th, a housing foundation, was held for review. Follow up on 2 Oct if no reply, then once more on 7 Oct, then stop (section 12). |
