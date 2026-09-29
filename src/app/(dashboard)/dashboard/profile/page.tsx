@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { User, Mail, Phone, Lock, Save, Building2, Users, Loader2, FileText } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { createClient } from '@/lib/supabase/client'
+import { MIN_PASSWORD_LENGTH, PASSWORD_HINT, checkNewPassword } from '@/lib/passwords'
 
 const USER_TYPE_LABELS: Record<string, { label: string; icon: typeof User }> = {
   individual: { label: 'Individual', icon: User },
@@ -84,12 +85,14 @@ export default function ProfilePage() {
       return
     }
 
-    if (passwordForm.new_password.length < 6) {
-      setPasswordError('Password must be at least 6 characters')
+    setPasswordSaving(true)
+    const passwordCheck = await checkNewPassword(passwordForm.new_password)
+    if (!passwordCheck.ok) {
+      setPasswordError(passwordCheck.message)
+      setPasswordSaving(false)
       return
     }
 
-    setPasswordSaving(true)
     const supabase = createClient()
 
     const { error } = await supabase.auth.updateUser({
@@ -278,8 +281,12 @@ export default function ProfilePage() {
                   value={passwordForm.new_password}
                   onChange={handlePasswordChange}
                   className="input-field"
-                  minLength={6}
+                  minLength={MIN_PASSWORD_LENGTH}
+                  aria-describedby="new-password-hint"
                 />
+                <p id="new-password-hint" className="mt-1 text-xs text-gray-500">
+                  {PASSWORD_HINT}
+                </p>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-gray-700">Confirm New Password</label>

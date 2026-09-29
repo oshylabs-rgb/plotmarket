@@ -11,7 +11,7 @@ export default function PrivacyPolicyPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-bold text-gray-900">Privacy Policy</h1>
-      <p className="mt-2 text-sm text-gray-500">Effective Date: 1 January 2026 | Last Updated: 28 September 2026</p>
+      <p className="mt-2 text-sm text-gray-500">Effective Date: 1 January 2026 | Last Updated: 29 September 2026</p>
 
       <div className="mt-10 space-y-10 text-gray-700 leading-relaxed">
         {/* 1. Who We Are */}
@@ -131,6 +131,7 @@ export default function PrivacyPolicyPage() {
           <ul className="mt-3 list-disc space-y-2 pl-6">
             <li>Encryption of data in transit using TLS/SSL</li>
             <li>Secure password hashing (passwords are never stored in plain text)</li>
+            <li>New passwords must be at least 10 characters and are checked against known data breaches. Your browser sends only the first 5 characters of a one way fingerprint of the password to our server, which asks the Have I Been Pwned service whether that group of fingerprints appears in a breach. Neither we nor Have I Been Pwned receive your password for this check.</li>
             <li>Row-level security policies on database tables</li>
             <li>Access controls limiting data access to authorised personnel</li>
             <li>Secure authentication via Supabase Auth with email verification</li>
