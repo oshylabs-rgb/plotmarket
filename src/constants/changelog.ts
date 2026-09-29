@@ -1,4 +1,4 @@
-export const APP_VERSION = '0.6.1'
+export const APP_VERSION = '0.6.2'
 
 export interface Release {
   version: string
@@ -8,6 +8,13 @@ export interface Release {
 
 /** Newest first. Keep entries factual and user facing. */
 export const CHANGELOG: Release[] = [
+  {
+    version: '0.6.2',
+    date: '2026-09-29',
+    changes: [
+      'Stronger passwords. New passwords need at least 10 characters and are checked against known data breaches when you sign up or change your password. Your password itself is never shared with the checking service.',
+    ],
+  },
   {
     version: '0.6.1',
     date: '2026-09-28',

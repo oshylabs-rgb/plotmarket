@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation'
 import { Mail, Lock, Eye, EyeOff, User, Phone, UserPlus, CheckCircle, Building2, Briefcase, FileText } from 'lucide-react'
 import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase/client'
+import { MIN_PASSWORD_LENGTH, PASSWORD_HINT, checkNewPassword } from '@/lib/passwords'
 import type { UserType } from '@/types/database'
 
 const USER_TYPES: {
@@ -80,6 +81,13 @@ function RegisterForm() {
 
     if (userType === 'developer' && !cacNumber.trim()) {
       setError('CAC Registration Number is required for Property Developers')
+      setLoading(false)
+      return
+    }
+
+    const passwordCheck = await checkNewPassword(password)
+    if (!passwordCheck.ok) {
+      setError(passwordCheck.message)
       setLoading(false)
       return
     }
@@ -354,7 +362,8 @@ function RegisterForm() {
                   placeholder="Create a strong password"
                   className="input-field pl-10 pr-10"
                   required
-                  minLength={6}
+                  minLength={MIN_PASSWORD_LENGTH}
+                  aria-describedby="password-hint"
                 />
                 <button
                   type="button"
@@ -364,6 +373,9 @@ function RegisterForm() {
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              <p id="password-hint" className="mt-1 text-xs text-gray-500">
+                {PASSWORD_HINT}
+              </p>
             </div>
           </div>
 

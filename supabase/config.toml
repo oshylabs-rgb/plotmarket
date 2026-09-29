@@ -12,6 +12,7 @@ additional_redirect_urls = [
   "http://localhost:3000/**",
 ]
 enable_signup = true
+minimum_password_length = 10
 
 [auth.rate_limit]
 email_sent = 100

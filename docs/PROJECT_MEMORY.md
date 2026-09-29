@@ -1,6 +1,6 @@
 # PlotMarket project memory
 
-Living notes for whoever works on plotmarket.ng next, human or agent. Keep it short and current. Last updated 28 Sep 2026.
+Living notes for whoever works on plotmarket.ng next, human or agent. Keep it short and current. Last updated 29 Sep 2026.
 
 ## The one rule
 
@@ -83,6 +83,8 @@ Free Starter 3 active listings; Founding Developer Pilot 20 in one estate for 30
 - **Outreach.** `docs/outreach/PILOT_OUTREACH_PACK.md` is the only current pack (pilot offer, never-say list, NDPA rules, UTM links, email, WhatsApp, LinkedIn, call, follow ups, objections). The 4 Sep Google Doc with the 90-day / 500 / ₦80,000 offer is retired.
 - **Old 90-day offer: nobody to honour.** Searched 28 Sep: Zoho `arnold.oshenye@oshylabs.eu` (every folder, about 710 messages, 3 Feb to 28 Sep 2026) and Resend (all 59 sends, 1 to 28 Sep) have no PlotMarket trial outreach and no replies. The 4 Sep pack appears never to have been sent from Oshylabs channels. The personal Gmail was searched earlier with no match. If someone ever quotes it, the pack's reply script and `/admin/pilots` Grant a pilot directly cover it.
 - **Warm leads.** 2 probable real sellers (agents, signed up 26 Sep) had no listings on 28 Sep. Activation email is in the outreach pack, section 13.
+- **Passwords (29 Sep).** Supabase stores them with bcrypt on every plan. Its leaked-password check is Pro-only, so `src/lib/passwords.ts` does it for free at sign up and in Dashboard, Profile: at least 10 characters, and the browser sends only the first 5 characters of the SHA-1 to `/api/password-check`, which relays the Have I Been Pwned range (nobody but the browser sees the full hash). It fails open if the service is down. A guard for honest users, not a security boundary: direct calls to the Supabase API skip it. `supabase/config.toml` now sets `minimum_password_length = 10`, **not yet applied to the live project**: Arnold sets Authentication, Providers, Email, Minimum password length to 10 in the Supabase dashboard (or `supabase config push` from a logged in machine). Existing users keep their passwords; the rules apply to new or changed ones. MongoDB was considered and rejected: it is a database, not a login service, and moving would mean rebuilding auth and every row level security rule.
+- **Lead sources.** Vibe Prospecting dataset `ds-97c99d1c-4f2b-4556-bbdc-fc8489b767a7` (50 Nigerian real estate and building CEOs, MDs and founders with valid emails, exported 29 Sep for 150 credits, 45 credits left) lives in the Vibe hub, not in git: it holds third party contact details. Log each contact's source in the outreach tracker before sending (outreach pack, section 4).
 - **Live verification 28 Sep** (rolled back, nothing persisted): Free 4th listing refused; self-admin and self-subscription refused; pilot request, 30 days, 21st listing and other-estate listing refused; expiry keeps the 3 earliest live and pauses the rest with no rows deleted; anon sees live sellers only; no enquiries on paused listings.
 - **Database access from cloud sessions** works through the Supabase connector signed in as cadencebyoshy@gmail.com (owner of org Oshylabs). pg_cron 1.6.4: `plotmarket-plan-expiry` (every 15 min) and `plotmarket-page-view-retention` (daily 03:17 UTC) both active.
 
