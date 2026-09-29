@@ -212,7 +212,18 @@ Developer with an estate: use section 6 but open with "You signed up to Plotmark
 
 Drafted and passed through the arnold-voice rules on 28 Sep 2026 (baseline rules; the voice memory file was not reachable from the build session). DM and LinkedIn are an unsampled register for Arnold's voice, so treat those two as closest guess and correct them freely. Corrections go to the voice memory so the next pack is closer.
 
-## 15. Send log
+## 15. Poster for printing in Nigeria
+
+For Mr Desmond Oshenye to print and put up. One A3 poster, made to be understood in a few seconds: the offer in three numbers, three reasons, his name and phone, and a QR code to register.
+
+| File | Use |
+|---|---|
+| `https://plotmarket.ng/brochures/plotmarket-developer-pilot-poster-A3.pdf` | Take this to the print shop. It is vector, so it prints sharply at A3, A2 or A1. |
+| `https://plotmarket.ng/brochures/plotmarket-developer-pilot-poster.png` | The same poster as an image, to send by WhatsApp or check on a phone. |
+
+Tell the printer: full colour, A3 (or A2 for a bigger one), do not resize or crop, and keep the margins. Everything sits 14 mm inside the edge so nothing is trimmed. The QR code carries `utm_source=poster`, so scans show as "poster" in `/admin` under Traffic and funnel. Source `brochure/poster.html`, rebuilt with `npm run brochure`; `src/constants/poster.test.ts` guards the numbers and claims, and the QR was checked by decoding the built PDF and PNG.
+
+## 16. Send log
 
 One line per batch. Names and addresses stay in the Zoho Sent folder, not in git.
 
