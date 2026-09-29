@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:db": "bash scripts/test-db.sh",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "brochure": "node scripts/build-brochure.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.9.0",

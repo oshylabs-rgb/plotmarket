@@ -71,35 +71,42 @@ Use these, not bare links. The admin dashboard (`/admin`, Traffic and funnel) sh
 
 ## 6. Cold email
 
-Subject: `20 free listings for {estate_name}`
+Subject: `20 free listings for your estate`
+
+The brochure travels with every email. Zoho's connector cannot attach files, so each email links to the PDF on plotmarket.ng (`public/brochures/plotmarket-developer-pilot.pdf`, built from `brochure/developer-pilot.html` with `npm run brochure`). A test fails if the brochure ever disagrees with `src/constants/plans.ts`.
 
 ```
 Hi {first_name},
 
-I run Plotmarket (plotmarket.ng), a property listing site for Nigeria. I'm picking a few developers to list one estate free for 30 days, and {estate_name} is the kind of project I want on it.
+I run Plotmarket (plotmarket.ng), a property listing site for Nigeria. I'm picking a few developers to list one estate free for 30 days, and {company} is the kind of developer I want on it.
 
-You get up to 20 active listings with photos, video and 360 tours, and one setup session with me to get them live. Buyers see your name and number and contact you directly. It costs you nothing and we take no commission on sales.
+You get up to 20 active listings with photos, video and 360 tours, and one setup session with me to get them live. Buyers see your name and number and contact you directly. It costs you nothing, and Plotmarket never takes or holds any payment for a property.
 
 We're new. You would be one of the first developers on the site.
 
 After 30 days nothing is deleted or charged. Three listings stay up free and the rest pause until you decide.
+
+The two page brochure: https://plotmarket.ng/brochures/plotmarket-developer-pilot.pdf
+To ask for the pilot: {register_link}
 
 Worth 15 minutes this week?
 
 Arnold Oshenye
 Plotmarket, Oshylabs Ltd
 +234 803 217 9317
-{email_link}
+plotmarket.ng
 
 Reply no and I won't email again.
 ```
+
+Greeting: "Hi {first_name}," for most people. For anyone whose name carries Dr, Chief or Hon, use "Dear Dr Surname,". Never guess a gendered title.
 
 ## 7. WhatsApp or SMS
 
 Only to a number the company publishes for sales or enquiries. Send from the Nigerian line.
 
 ```
-Hi {first_name}, Arnold from Plotmarket (plotmarket.ng). I'm inviting a few developers to list one estate free for 30 days. Up to 20 listings with photos, video and 360 tours, and I set it up with you. It's free and we take no commission. Can I send you the details for {estate_name}?
+Hi {first_name}, Arnold from Plotmarket (plotmarket.ng). I'm inviting a few developers to list one estate free for 30 days. Up to 20 listings with photos, video and 360 tours, and I set it up with you. It's free, and Plotmarket never handles any payment for a property. Can I send you the two page brochure for {company}? https://plotmarket.ng/brochures/plotmarket-developer-pilot.pdf
 ```
 
 ## 8. LinkedIn DM
@@ -151,7 +158,7 @@ No. You state the title document, C of O, Governor's Consent and so on, and the 
 
 Do you take a commission or handle payment?
 ```
-No. Buyers deal with you directly. Plotmarket never holds money for property.
+Buyers deal with you directly. Plotmarket never takes or holds payment for a property. What we charge is on plotmarket.ng/pricing.
 ```
 
 Can I list more than one estate?
@@ -172,7 +179,7 @@ Then, if the acceptance is on record: grant the pilot in `/admin/pilots`, "Grant
 
 Send me something to read
 ```
-Sure. Plans and what happens at the end of the pilot are here: {pricing_link}. Happy to talk it through on a call.
+Sure. Here is the two page brochure: https://plotmarket.ng/brochures/plotmarket-developer-pilot.pdf. Plans and what happens at the end of the pilot are also on {pricing_link}. Happy to talk it through on a call.
 ```
 
 ## 12. Cadence and targets

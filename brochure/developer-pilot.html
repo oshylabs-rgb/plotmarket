@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en-NG">
+<head>
+<meta charset="utf-8" />
+<title>Plotmarket Founding Developer Pilot</title>
+<!--
+  Source for public/brochures/plotmarket-developer-pilot.pdf.
+  Rebuild with: npm run brochure
+  Every number here is checked against src/constants/plans.ts by
+  src/constants/brochure.test.ts. Keep the visible text free of hyphens and dashes.
+-->
+<style>
+  @font-face { font-family: 'Public Sans'; font-weight: 400; src: url('../src/app/fonts/public-sans-latin-400-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Public Sans'; font-weight: 500; src: url('../src/app/fonts/public-sans-latin-500-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Public Sans'; font-weight: 600; src: url('../src/app/fonts/public-sans-latin-600-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Source Serif 4'; font-weight: 600; src: url('../src/app/fonts/source-serif-4-latin-600-normal.woff2') format('woff2'); }
+  @font-face { font-family: 'Source Serif 4'; font-weight: 700; src: url('../src/app/fonts/source-serif-4-latin-700-normal.woff2') format('woff2'); }
+
+  :root {
+    --g900: #0c2620; --g800: #12352a; --g700: #184636; --g600: #1f5843; --g500: #2c6e55;
+    --g200: #aecfbf; --g100: #d7e7df; --g50: #eff5f2;
+    --gold-logo: #f0c435; --gold300: #d3b77e; --gold400: #b8955a; --gold500: #9a7840; --gold100: #f4e9d3; --gold50: #fbf6ec;
+    --cream50: #fbfbf9; --cream200: #ececE8; --cream300: #e0e1dc;
+    --ink900: #141817; --ink700: #333937; --ink600: #434a47; --ink500: #5a625e;
+  }
+  @page { size: A4; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: 'Public Sans', 'DejaVu Sans', sans-serif; color: var(--ink700); font-size: 10.6pt; line-height: 1.5; background: #fff; }
+  a { color: inherit; text-decoration: none; }
+  .page { width: 210mm; height: 297mm; position: relative; overflow: hidden; background: var(--cream50); page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  .serif { font-family: 'Source Serif 4', Georgia, serif; }
+
+  /* Header band */
+  .band { background: var(--g800); color: #fff; height: 25mm; padding: 0 16mm; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 3mm; }
+  .brand svg { width: 10mm; height: 10mm; }
+  .wordmark { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 20pt; letter-spacing: -0.01em; }
+  .wordmark span { color: var(--gold300); }
+  .band .tag { font-size: 8pt; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--g200); }
+
+  /* Page 1 */
+  .hero { padding: 15mm 16mm 0; }
+  .kicker { font-size: 8.5pt; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold500); }
+  h1 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 35pt; line-height: 1.06; color: var(--g800); margin-top: 4mm; letter-spacing: -0.015em; text-wrap: balance; }
+  .lead { font-size: 12.2pt; line-height: 1.55; color: var(--ink600); margin-top: 5mm; max-width: 152mm; }
+
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5mm; padding: 10mm 16mm 0; }
+  .stat { background: #fff; border: 1px solid var(--cream300); border-top: 3px solid var(--gold400); border-radius: 2mm; padding: 5mm 5mm 4.5mm; }
+  .stat .n { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 38pt; line-height: 1; color: var(--g700); }
+  .stat .l { margin-top: 2.5mm; font-size: 9.6pt; line-height: 1.4; color: var(--ink600); }
+  .nocard { padding: 4mm 16mm 0; font-size: 10pt; font-weight: 600; color: var(--g700); }
+
+  h2 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 17pt; line-height: 1.15; color: var(--g800); letter-spacing: -0.01em; }
+  .section { padding: 9mm 16mm 0; }
+  .checks { list-style: none; margin-top: 4mm; display: grid; grid-template-columns: 1fr 1fr; gap: 3.2mm 8mm; }
+  .checks li { position: relative; padding-left: 7mm; font-size: 10.2pt; line-height: 1.45; }
+  .checks li::before { content: ''; position: absolute; left: 0; top: 0.9mm; width: 4mm; height: 4mm; border-radius: 50%; background: var(--g100) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M4 8.4l2.6 2.6L12 5.4' fill='none' stroke='%231f5843' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/></svg>") center/100% no-repeat; }
+  .checks b { font-weight: 600; color: var(--ink900); }
+
+  .callout { margin: 8mm 16mm 0; background: var(--gold50); border: 1px solid var(--gold100); border-left: 3px solid var(--gold400); border-radius: 1.5mm; padding: 4.5mm 6mm; }
+  .callout .t { font-weight: 600; color: var(--ink900); font-size: 10.4pt; }
+  .callout p { font-size: 10pt; color: var(--ink600); margin-top: 1mm; }
+
+  .foot { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 16mm 9mm; display: flex; justify-content: space-between; font-size: 7.8pt; color: var(--ink500); }
+  .foot .rule { position: absolute; left: 16mm; right: 16mm; top: -4mm; border-top: 1px solid var(--cream300); }
+
+  /* Page 2 */
+  .band.slim { height: 17mm; }
+  .band.slim .wordmark { font-size: 15pt; }
+  .band.slim .brand svg { width: 7.5mm; height: 7.5mm; }
+  .steps { list-style: none; margin-top: 4.5mm; counter-reset: s; display: grid; gap: 3.2mm; }
+  .steps li { counter-increment: s; position: relative; background: #fff; border: 1px solid var(--cream300); border-radius: 2mm; padding: 3.6mm 5mm 3.6mm 15mm; }
+  .steps li::before { content: counter(s); position: absolute; left: 4.2mm; top: 50%; transform: translateY(-50%); width: 7mm; height: 7mm; border-radius: 50%; background: var(--g700); color: #fff; font-weight: 600; font-size: 10pt; display: flex; align-items: center; justify-content: center; }
+  .steps b { font-weight: 600; color: var(--ink900); }
+  .steps span { display: block; font-size: 9.6pt; color: var(--ink600); }
+
+  .two { display: grid; grid-template-columns: 1.15fr 1fr; gap: 6mm; padding: 8mm 16mm 0; }
+  .card { background: #fff; border: 1px solid var(--cream300); border-radius: 2mm; padding: 5mm 5.5mm; }
+  .card h3 { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 13pt; color: var(--g800); margin-bottom: 2.5mm; }
+  .card ul { list-style: none; display: grid; gap: 2.2mm; }
+  .card li { position: relative; padding-left: 4.5mm; font-size: 9.7pt; line-height: 1.45; color: var(--ink700); }
+  .card li::before { content: ''; position: absolute; left: 0; top: 2.1mm; width: 1.8mm; height: 1.8mm; border-radius: 50%; background: var(--gold400); }
+  .card li b { font-weight: 600; color: var(--ink900); }
+  .card.soft { background: var(--g50); border-color: var(--g100); }
+  .card.soft li::before { background: var(--g500); }
+
+  .cta { margin: 8mm 16mm 0; background: var(--g800); color: #fff; border-radius: 2.5mm; padding: 7mm 8mm; display: grid; grid-template-columns: 1.2fr 1fr; gap: 8mm; align-items: center; }
+  .cta h2 { color: #fff; font-size: 17pt; }
+  .cta p { color: var(--g200); font-size: 10pt; margin-top: 1.5mm; }
+  .cta .btn { display: inline-block; margin-top: 4mm; background: var(--gold-logo); color: var(--g900); font-weight: 600; font-size: 10.5pt; padding: 2.6mm 5.5mm; border-radius: 1.6mm; }
+  .contact { font-size: 9.8pt; line-height: 1.7; }
+  .contact .who { font-family: 'Source Serif 4', Georgia, serif; font-weight: 700; font-size: 13pt; color: #fff; }
+  .contact .role { color: var(--g200); font-size: 9pt; margin-bottom: 1.5mm; }
+  .contact a { color: #fff; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<!-- ============================ PAGE 1 ============================ -->
+<section class="page">
+  <div class="band">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Plotmarket">
+        <rect width="32" height="32" rx="6" fill="#1f5843"/>
+        <path d="M8 22V12L16 7L24 12V22L16 27L8 22Z" stroke="#f0c435" stroke-width="1.5" fill="none"/>
+        <path d="M16 7V27" stroke="#f0c435" stroke-width="1.5"/>
+        <path d="M8 12L24 22" stroke="#f0c435" stroke-width="1" opacity="0.5"/>
+        <path d="M24 12L8 22" stroke="#f0c435" stroke-width="1" opacity="0.5"/>
+        <circle cx="16" cy="16" r="2.5" fill="#f0c435"/>
+      </svg>
+      <div class="wordmark">Plot<span>market</span></div>
+    </div>
+    <div class="tag">Founding Developer Pilot</div>
+  </div>
+
+  <div class="hero">
+    <div class="kicker">For property developers in Nigeria</div>
+    <h1>List one estate free for 30 days.</h1>
+    <p class="lead">Up to 20 active listings, with photos, video and 360° tours. We set it up with you. Buyers see your name and phone and contact you directly.</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="n">20</div><div class="l">active listings for one estate or project</div></div>
+    <div class="stat"><div class="n">30</div><div class="l">days free, counted from the day we approve you</div></div>
+    <div class="stat"><div class="n">1</div><div class="l">assisted setup session with our team</div></div>
+  </div>
+  <div class="nocard">No card. No automatic charge.</div>
+
+  <div class="section">
+    <h2>What your listings show</h2>
+    <ul class="checks">
+      <li><b>Photos, video and 360° media</b> on every listing, so buyers can look around before they travel.</li>
+      <li><b>The title document, as you state it.</b> Certificate of Occupancy, Governor's Consent, Deed of Assignment and more.</li>
+      <li><b>Your name and phone number,</b> so buyers contact you directly.</li>
+      <li><b>Enquiries in your inbox.</b> Buyers can send an enquiry that lands in your Plotmarket inbox.</li>
+      <li><b>Review before going live.</b> We look at every listing before buyers see it.</li>
+      <li><b>Yours to manage.</b> Pause a listing, bring it back, or mark it sold from My Listings.</li>
+    </ul>
+  </div>
+
+  <div class="callout">
+    <div class="t">We are new, and we say so.</div>
+    <p>You would be one of the first developers on Plotmarket. We would rather set your estate up properly, with you, than promise numbers we cannot show.</p>
+  </div>
+
+  <div class="foot"><div class="rule"></div><div>Plotmarket is a product of Oshylabs Ltd (Company No. 16883720).</div><div>Version September 2026 &nbsp;·&nbsp; Page 1 of 2</div></div>
+</section>
+
+<!-- ============================ PAGE 2 ============================ -->
+<section class="page">
+  <div class="band slim">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Plotmarket">
+        <rect width="32" height="32" rx="6" fill="#1f5843"/>
+        <path d="M8 22V12L16 7L24 12V22L16 27L8 22Z" stroke="#f0c435" stroke-width="1.5" fill="none"/>
+        <path d="M16 7V27" stroke="#f0c435" stroke-width="1.5"/>
+        <circle cx="16" cy="16" r="2.5" fill="#f0c435"/>
+      </svg>
+      <div class="wordmark">Plot<span>market</span></div>
+    </div>
+    <div class="tag">Founding Developer Pilot</div>
+  </div>
+
+  <div class="section" style="padding-top: 11mm;">
+    <h2>How the pilot works</h2>
+    <ol class="steps">
+      <li><b>Register as a developer.</b><span>At plotmarket.ng/register. Your company name and CAC number are required.</span></li>
+      <li><b>Request the pilot.</b><span>On your Plan page, name the estate, its state and its area. One pilot per company, for one estate.</span></li>
+      <li><b>We approve it by hand.</b><span>The 30 days start when we approve, not when you register.</span></li>
+      <li><b>We set up your listings with you.</b><span>Up to 20 active listings, live for buyers to find and contact you.</span></li>
+    </ol>
+  </div>
+
+  <div class="two">
+    <div class="card">
+      <h3>After 30 days</h3>
+      <ul>
+        <li><b>Nothing is deleted. Nothing is charged.</b></li>
+        <li>Your 3 earliest published listings stay live on Free Starter.</li>
+        <li>The others are paused: hidden from buyers and search, but kept with all their photos and details.</li>
+        <li>To bring them all back, Business is ₦35,000 for 30 days and up to 100 active listings. One payment through Paystack. It does not renew automatically.</li>
+        <li>Or choose which 3 stay live.</li>
+      </ul>
+    </div>
+    <div class="card soft">
+      <h3>Good to know</h3>
+      <ul>
+        <li>Each listing shows the title document as the seller states it. <b>Plotmarket does not verify title documents or identity,</b> and tells buyers to confirm at the state land registry.</li>
+        <li>Plotmarket never takes or holds payment for a property. Buyers deal with you directly.</li>
+        <li>Pilots are approved by hand, and approval is not automatic.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="cta">
+    <div>
+      <h2>Ask for your pilot</h2>
+      <p>It takes a few minutes. Tell us the estate and we take it from there.</p>
+      <a class="btn" href="https://plotmarket.ng/register?plan=pilot&amp;utm_source=brochure&amp;utm_medium=pdf&amp;utm_campaign=pilot-oct26">plotmarket.ng/register</a>
+    </div>
+    <div class="contact">
+      <div class="who">Arnold Oshenye</div>
+      <div class="role">Plotmarket, Oshylabs Ltd</div>
+      <div><a href="tel:+2348032179317">+234 803 217 9317</a></div>
+      <div><a href="mailto:arnold.oshenye@oshylabs.eu">arnold.oshenye@oshylabs.eu</a></div>
+      <div><a href="https://plotmarket.ng">plotmarket.ng</a></div>
+    </div>
+  </div>
+
+  <div class="foot"><div class="rule"></div><div>Terms and privacy: plotmarket.ng/terms and plotmarket.ng/privacy.</div><div>Version September 2026 &nbsp;·&nbsp; Page 2 of 2</div></div>
+</section>
+
+</body>
+</html>
