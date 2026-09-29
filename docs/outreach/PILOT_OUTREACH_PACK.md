@@ -188,6 +188,20 @@ Up to 20 new contacts a day. Log each one in the tracker: company, contact, sour
 
 October targets, not claims: 5 pilots active, 60 real listings live, 1 Business payment by the first pilot's end date. Check `/admin` weekly: campaign visits, sign ups, pilot requests, live listings.
 
-## 13. Voice check
+## 13. People who signed up but have not listed
+
+Highest value contacts: they already chose Plotmarket. Find them in `/admin` Users (agent or developer, no listings). Send from `arnold.oshenye@oshylabs.eu`, once, then one follow up at most.
+
+Agent:
+```
+Hi {first_name}, you signed up to Plotmarket on {signup_date} but haven't listed anything yet. What stopped you? If it's time, send me the details and photos of up to 3 properties on WhatsApp or email and I'll put them up with you. Free, no card.
+
+Arnold, Plotmarket
++234 803 217 9317
+```
+
+Developer with an estate: use section 6 but open with "You signed up to Plotmarket on {signup_date}" instead of the first line, and link to Dashboard, Plan to request the pilot.
+
+## 14. Voice check
 
 Drafted and passed through the arnold-voice rules on 28 Sep 2026 (baseline rules; the voice memory file was not reachable from the build session). DM and LinkedIn are an unsampled register for Arnold's voice, so treat those two as closest guess and correct them freely. Corrections go to the voice memory so the next pack is closer.

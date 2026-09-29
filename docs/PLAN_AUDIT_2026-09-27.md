@@ -63,7 +63,7 @@ Limitation: the live Supabase project `qjlwmpbmrdercymcnroz` could not be querie
 | Google Doc "Untitled document" (B2B outreach pack, 4 Sep 2026, id `1YTe76qkDYKiTcr7iaQLlJcQjL8jKqWy4oNmDZ3NEYpc`, owned by the personal Drive) | Email subject line, email body, WhatsApp script, call script, LinkedIn DM, objection handling and the close all offer "Business plan free for 90 days: 500 listings, bulk upload, a developer page, and a monthly report of enquiries… Normal price is ₦80,000 a month", "offer stays open until {offer_end_date}". Also asserts diaspora buyers "come to us", which is unevidenced. |
 | Live DB | Unknown. Needs query G2 for any `business` accounts or subscriptions. |
 
-Whether any company **accepted** the 90-day offer is unverified. No match in the personal Gmail. The pack says sends go from `arnold.oshenye@oshylabs.eu` (Zoho), which was not searched.
+Whether any company **accepted** the 90-day offer is unverified. No match in the personal Gmail. The pack says sends go from `arnold.oshenye@oshylabs.eu` (Zoho), which was not searched. **Resolved 28 Sep:** Zoho (all folders, about 710 messages) and Resend (all sends since 1 Sep) searched; the offer was never sent and nobody accepted it. No pilots are owed.
 
 ## E. Where Free users reach paid-only capabilities
 
