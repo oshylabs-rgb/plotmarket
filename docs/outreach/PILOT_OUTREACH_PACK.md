@@ -211,3 +211,11 @@ Developer with an estate: use section 6 but open with "You signed up to Plotmark
 ## 14. Voice check
 
 Drafted and passed through the arnold-voice rules on 28 Sep 2026 (baseline rules; the voice memory file was not reachable from the build session). DM and LinkedIn are an unsampled register for Arnold's voice, so treat those two as closest guess and correct them freely. Corrections go to the voice memory so the next pack is closer.
+
+## 15. Send log
+
+One line per batch. Names and addresses stay in the Zoho Sent folder, not in git.
+
+| Date | Batch | Sent | Source | Notes |
+|---|---|---|---|---|
+| 29 Sep 2026, 10:00 Stockholm | Developer email 1, brochure linked | 7 of a planned 20: Harmony Gardens and Estate Development, Periwinkle Residences, Landmark Africa, Comfort Homes and Properties, Edala Development, Tribitat Real Estate, Away Homes Group | Vibe Prospecting dataset `ds-97c99d1c-4f2b-4556-bbdc-fc8489b767a7`, professional emails with status valid, decision makers at developers only | Only 8 of 50 rows passed the rules (20 had no valid email, 21 were not developers). The 8th, a housing foundation, was held for review. Follow up on 2 Oct if no reply, then once more on 7 Oct, then stop (section 12). |
